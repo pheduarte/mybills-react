@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Sora:wght@400;600;700;800&display=swap');
+
+/* These variables define the visual language of the entire app. */
+:root {
+  font-family: 'DM Sans', 'Avenir Next', 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #1d2433;
+  background:
+    radial-gradient(circle at top left, rgba(184, 228, 255, 0.8), transparent 40%),
+    radial-gradient(circle at top right, rgba(176, 242, 203, 0.85), transparent 35%),
+    linear-gradient(180deg, #eef3ff 0%, #f6f7fb 48%, #eef2f9 100%);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  --text-strong: #121a2b;
+  --muted: #6c768d;
+}
+
+/* We reset the page so the app can fully control the mobile layout. */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: #eef3ff;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100svh;
+}
+
+body,
+button,
+input,
+select {
+  font-family: 'DM Sans', 'Avenir Next', 'Segoe UI', sans-serif;
+}
+
+h1,
+h2,
+h3,
+strong {
+  font-family: 'Sora', 'Avenir Next', 'Segoe UI', sans-serif;
+  color: var(--text-strong);
+}
+
+button {
+  cursor: pointer;
+}
+
+button,
+input,
+select {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+button:hover,
+input:hover,
+select:hover {
+  box-shadow: 0 12px 30px rgba(57, 68, 92, 0.08);
+}
+
+#root {
+  min-height: 100svh;
+}

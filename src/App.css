@@ -1,0 +1,381 @@
+/* This file styles the app like a focused mobile finance screen. */
+
+.app-shell {
+  width: min(100%, 430px);
+  min-height: 100svh;
+  margin: 0 auto;
+  padding:
+    max(20px, env(safe-area-inset-top))
+    18px
+    max(24px, env(safe-area-inset-bottom))
+    18px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* This is the small app header at the top of the phone layout. */
+.topbar,
+.hero-card__header,
+.panel__title,
+.section-heading,
+.transaction-row,
+.upcoming-row,
+.balance-row,
+.summary-grid,
+.form-row {
+  display: flex;
+  align-items: center;
+}
+
+.topbar,
+.hero-card__header,
+.panel__title,
+.section-heading,
+.transaction-row,
+.upcoming-row,
+.balance-row {
+  justify-content: space-between;
+}
+
+.topbar h1,
+.hero-card h2,
+.panel h3,
+.section-heading h3,
+.category-card h3 {
+  margin: 0;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+
+/* These rounded buttons keep the interface feeling touch-friendly. */
+.icon-button,
+.primary-button,
+.ghost-button,
+.chip {
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+}
+
+.icon-button {
+  min-height: 44px;
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text-strong);
+  box-shadow: 0 10px 30px rgba(36, 45, 71, 0.1);
+}
+
+.icon-button--soft {
+  background: rgba(243, 245, 255, 0.9);
+}
+
+.primary-button {
+  min-height: 50px;
+  background: linear-gradient(135deg, #111827 0%, #263247 100%);
+  color: white;
+  font-weight: 700;
+  padding: 0 18px;
+  box-shadow: 0 20px 35px rgba(17, 24, 39, 0.2);
+}
+
+.ghost-button {
+  min-height: 34px;
+  padding: 0 12px;
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--muted);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  background: rgba(116, 214, 108, 0.15);
+  color: #2f6d33;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+/* These panels are the main card surfaces used throughout the app. */
+.hero-card,
+.panel,
+.category-card {
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 20px 45px rgba(95, 110, 145, 0.14);
+  backdrop-filter: blur(18px);
+}
+
+.hero-card {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.hero-card__month {
+  text-align: center;
+}
+
+.hero-card__month h2 {
+  font-size: clamp(2rem, 7vw, 3.4rem);
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.progress-card {
+  border-radius: 24px;
+  background: rgba(243, 245, 252, 0.95);
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.progress-bar {
+  height: 16px;
+  display: flex;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(214, 219, 232, 0.9);
+}
+
+.progress-bar__income {
+  background: linear-gradient(90deg, #74d66c 0%, #6bcf8b 100%);
+}
+
+.progress-bar__expense {
+  background: linear-gradient(90deg, #ced6e7 0%, #b7c0d6 100%);
+}
+
+.summary-grid {
+  gap: 12px;
+  align-items: stretch;
+}
+
+.summary-stat {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 22px;
+  background: white;
+}
+
+.summary-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.summary-icon.income {
+  background: rgba(116, 214, 108, 0.18);
+  color: #2f6d33;
+}
+
+.summary-icon.expense {
+  background: rgba(159, 170, 194, 0.2);
+  color: #5f6c86;
+}
+
+.summary-label {
+  margin: 0 0 4px;
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+
+.balance-row {
+  padding: 0 6px;
+}
+
+.balance-row p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.balance-row strong {
+  font-size: 1.8rem;
+  letter-spacing: -0.05em;
+}
+
+.balance-row.positive strong {
+  color: #2f6d33;
+}
+
+.balance-row.negative strong {
+  color: #5c647c;
+}
+
+/* The form uses a simple stacked mobile layout with two-column rows where space allows. */
+.panel {
+  padding: 18px;
+  display: grid;
+  gap: 16px;
+}
+
+.transaction-form {
+  display: grid;
+  gap: 14px;
+}
+
+.transaction-form label {
+  display: grid;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.form-row {
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.form-row > label {
+  flex: 1;
+}
+
+.transaction-form input,
+.transaction-form select {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(164, 173, 196, 0.4);
+  background: rgba(248, 250, 255, 0.95);
+  color: var(--text-strong);
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.transaction-form input:focus,
+.transaction-form select:focus,
+.icon-button:focus,
+.primary-button:focus,
+.ghost-button:focus {
+  outline: 2px solid rgba(17, 24, 39, 0.18);
+  outline-offset: 2px;
+}
+
+/* This list styles the "upcoming payments" card. */
+.upcoming-list,
+.category-card__list {
+  display: grid;
+  gap: 12px;
+}
+
+.upcoming-row,
+.transaction-row {
+  gap: 12px;
+  align-items: flex-start;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(156, 167, 189, 0.16);
+}
+
+.upcoming-row:last-child,
+.transaction-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.upcoming-row p,
+.transaction-row p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.upcoming-row__meta,
+.transaction-row__meta {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  text-align: right;
+}
+
+/* This section holds the separate category cards. */
+.categories-section {
+  display: grid;
+  gap: 14px;
+}
+
+.categories-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.category-card {
+  padding: 18px;
+  border-top: 6px solid var(--category-accent);
+  display: grid;
+  gap: 14px;
+}
+
+.category-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.category-card h3 {
+  font-size: 1.4rem;
+}
+
+.amount-positive,
+.amount-negative {
+  font-weight: 800;
+}
+
+.amount-positive {
+  color: #2f6d33;
+}
+
+.amount-negative {
+  color: #5c647c;
+}
+
+/* This empty state appears when a month has no matching transactions. */
+.empty-state {
+  display: grid;
+  gap: 6px;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.empty-state p {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* This small breakpoint keeps the form usable on narrower phones too. */
+@media (max-width: 380px) {
+  .summary-grid,
+  .form-row {
+    flex-direction: column;
+  }
+
+  .hero-card__header {
+    gap: 10px;
+  }
+
+  .icon-button {
+    padding: 0 12px;
+  }
+}
