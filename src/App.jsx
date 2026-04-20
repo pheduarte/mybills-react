@@ -593,6 +593,13 @@ function App() {
       {/* This hero card summarizes the selected month at a glance. */}
       <section className="hero-card">
         <div className="hero-card__header">
+          <div className="hero-card__month">
+            <p className="eyebrow">Cashboard</p>
+            <h2>{formatMonthLabel(selectedMonth)}</h2>
+          </div>
+        </div>
+
+        <div className="hero-card__nav">
           <button
             className="icon-button icon-button--soft"
             type="button"
@@ -600,11 +607,6 @@ function App() {
           >
             Prev
           </button>
-
-          <div className="hero-card__month">
-            <p className="eyebrow">Cashboard</p>
-            <h2>{formatMonthLabel(selectedMonth)}</h2>
-          </div>
 
           <button
             className="icon-button icon-button--soft"
