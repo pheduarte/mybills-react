@@ -47,6 +47,11 @@
   margin: 0;
 }
 
+.topbar h1 {
+  font-size: clamp(2.7rem, 10vw, 4.2rem);
+  line-height: 0.92;
+}
+
 .eyebrow {
   margin: 0 0 6px;
   font-size: 0.76rem;
@@ -129,7 +134,7 @@
 }
 
 .hero-card__month h2 {
-  font-size: clamp(2rem, 7vw, 3.4rem);
+  font-size: clamp(1.8rem, 5.9vw, 2.9rem);
   line-height: 1;
   letter-spacing: -0.06em;
 }
@@ -228,6 +233,48 @@
   padding: 18px;
   display: grid;
   gap: 16px;
+}
+
+.composer {
+  position: sticky;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 10;
+}
+
+.composer--closed {
+  padding: 10px;
+  gap: 0;
+}
+
+.composer-trigger {
+  width: 100%;
+  display: grid;
+  gap: 2px;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 22px;
+  text-align: left;
+  background: rgba(248, 250, 255, 0.96);
+  color: var(--text-strong);
+}
+
+.composer-trigger__label {
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.composer-trigger__placeholder {
+  font-size: 1rem;
+  color: #8a93a8;
+}
+
+.composer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .transaction-form {
@@ -377,5 +424,11 @@
 
   .icon-button {
     padding: 0 12px;
+  }
+
+  .panel__title,
+  .composer-actions {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

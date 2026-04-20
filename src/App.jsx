@@ -444,6 +444,9 @@ function App() {
   // This state lets the user hide balances when sharing the screen.
   const [hideAmounts, setHideAmounts] = useState(false)
 
+  // This state controls whether the bottom add-entry composer is open.
+  const [isEntryOpen, setIsEntryOpen] = useState(false)
+
   // This state controls the add-transaction form inputs.
   const [formState, setFormState] = useState(() => ({
     title: '',
@@ -480,6 +483,11 @@ function App() {
 
   // This grouped data becomes the list of separate category cards.
   const categoryGroups = groupTransactionsByCategory(monthTransactions)
+
+  // This derived list feeds the category suggestion menu while still allowing new values.
+  const categoryOptions = [...new Set([...CATEGORY_SUGGESTIONS, ...transactions.map((item) => item.category)])].sort(
+    (left, right) => left.localeCompare(right),
+  )
 
   // This is used to draw the split bar between income and expense totals.
   const cashFlowTotal = totalIncome + totalExpenses
@@ -536,6 +544,7 @@ function App() {
 
     setTransactions((currentTransactions) => [...currentTransactions, nextTransaction])
     setSelectedMonth(getMonthKey(formState.date))
+    setIsEntryOpen(false)
 
     // We clear only the fields that should change most often between entries.
     setFormState((currentForm) => ({
@@ -569,7 +578,6 @@ function App() {
       {/* This top area acts like a simple mobile app header. */}
       <header className="topbar">
         <div>
-          <p className="eyebrow">Personal budget</p>
           <h1>MyBills</h1>
         </div>
 
@@ -623,92 +631,6 @@ function App() {
             <strong>{formatCurrency(balance, hideAmounts)}</strong>
           </div>
         </div>
-      </section>
-
-      {/* This form is the learning area where you can practice React state updates. */}
-      <section className="panel">
-        <div className="panel__title">
-          <div>
-            <p className="eyebrow">Add new entry</p>
-            <h3>Income and expenses</h3>
-          </div>
-          <span className="chip">Saved locally</span>
-        </div>
-
-        <form className="transaction-form" onSubmit={handleAddTransaction}>
-          <label>
-            Title
-            <input
-              name="title"
-              type="text"
-              placeholder="Rent, Salary, Internet..."
-              value={formState.title}
-              onChange={handleInputChange}
-            />
-          </label>
-
-          <div className="form-row">
-            <label>
-              Type
-              <select name="type" value={formState.type} onChange={handleInputChange}>
-                <option value="expense">Expense</option>
-                <option value="income">Income</option>
-              </select>
-            </label>
-
-            <label>
-              Amount
-              <input
-                name="amount"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                value={formState.amount}
-                onChange={handleInputChange}
-              />
-            </label>
-          </div>
-
-          <div className="form-row">
-            <label>
-              Date
-              <input name="date" type="date" value={formState.date} onChange={handleInputChange} />
-            </label>
-
-            <label>
-              Category
-              <input
-                list="category-suggestions"
-                name="category"
-                type="text"
-                placeholder="House"
-                value={formState.category}
-                onChange={handleInputChange}
-              />
-              <datalist id="category-suggestions">
-                {CATEGORY_SUGGESTIONS.map((category) => (
-                  <option key={category} value={category} />
-                ))}
-              </datalist>
-            </label>
-          </div>
-
-          <label>
-            Notes
-            <input
-              name="notes"
-              type="text"
-              placeholder="Installment 2 of 5, Streaming, Pay cycle..."
-              value={formState.notes}
-              onChange={handleInputChange}
-            />
-          </label>
-
-          <button className="primary-button" type="submit">
-            Add transaction
-          </button>
-        </form>
       </section>
 
       {/* This section surfaces the next expenses in the selected month. */}
@@ -773,6 +695,107 @@ function App() {
             <strong>This month is empty</strong>
             <p>Use the form to add your first income or expense for {formatMonthLabel(selectedMonth)}.</p>
           </div>
+        )}
+      </section>
+
+      {/* This bottom composer stays visible and expands into the full form when tapped. */}
+      <section className={`panel composer ${isEntryOpen ? 'composer--open' : 'composer--closed'}`}>
+        {!isEntryOpen ? (
+          <button className="composer-trigger" type="button" onClick={() => setIsEntryOpen(true)}>
+            <span className="composer-trigger__label">Add new entry</span>
+            <span className="composer-trigger__placeholder">Tap to add income or expense...</span>
+          </button>
+        ) : (
+          <>
+            <div className="panel__title">
+              <div>
+                <p className="eyebrow">Add new entry</p>
+                <h3>Income and expenses</h3>
+              </div>
+
+              <div className="composer-actions">
+                <span className="chip">Saved locally</span>
+                <button className="ghost-button" type="button" onClick={() => setIsEntryOpen(false)}>
+                  Close
+                </button>
+              </div>
+            </div>
+
+            <form className="transaction-form" onSubmit={handleAddTransaction}>
+              <label>
+                Title
+                <input
+                  name="title"
+                  type="text"
+                  placeholder="Rent, Salary, Internet..."
+                  value={formState.title}
+                  onChange={handleInputChange}
+                />
+              </label>
+
+              <div className="form-row">
+                <label>
+                  Type
+                  <select name="type" value={formState.type} onChange={handleInputChange}>
+                    <option value="expense">Expense</option>
+                    <option value="income">Income</option>
+                  </select>
+                </label>
+
+                <label>
+                  Amount
+                  <input
+                    name="amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={formState.amount}
+                    onChange={handleInputChange}
+                  />
+                </label>
+              </div>
+
+              <div className="form-row">
+                <label>
+                  Date
+                  <input name="date" type="date" value={formState.date} onChange={handleInputChange} />
+                </label>
+
+                <label>
+                  Category
+                  <input
+                    list="category-suggestions"
+                    name="category"
+                    type="text"
+                    placeholder="House"
+                    value={formState.category}
+                    onChange={handleInputChange}
+                  />
+                  <datalist id="category-suggestions">
+                    {categoryOptions.map((category) => (
+                      <option key={category} value={category} />
+                    ))}
+                  </datalist>
+                </label>
+              </div>
+
+              <label>
+                Notes
+                <input
+                  name="notes"
+                  type="text"
+                  placeholder="Installment 2 of 5, Streaming, Pay cycle..."
+                  value={formState.notes}
+                  onChange={handleInputChange}
+                />
+              </label>
+
+              <button className="primary-button" type="submit">
+                Add transaction
+              </button>
+            </form>
+          </>
         )}
       </section>
     </main>
