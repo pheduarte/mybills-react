@@ -386,6 +386,38 @@
   text-align: right;
 }
 
+.transaction-row__content {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.transaction-row__content strong,
+.transaction-row__content p {
+  display: block;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: var(--text-strong);
+}
+
+.checkbox-row input {
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  min-height: 20px;
+  margin: 0;
+  accent-color: #2f6d33;
+}
+
 /* This section holds the separate category cards. */
 .categories-section {
   display: grid;

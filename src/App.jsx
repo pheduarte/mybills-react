@@ -4,6 +4,7 @@ import './App.css'
 // These localStorage keys let the app remember data between refreshes.
 const STORAGE_KEY = 'mybills-transactions-v1'
 const MONTH_STORAGE_KEY = 'mybills-selected-month-v1'
+const RECURRING_MONTH_COUNT = 24
 
 // These category suggestions mirror the way you already group your bills.
 const CATEGORY_SUGGESTIONS = [
@@ -246,6 +247,44 @@ function getDefaultDateForMonth(monthKey) {
   return `${monthKey}-01`
 }
 
+// This helper creates a fresh form state for either add mode or edit mode.
+function createEmptyForm(monthKey) {
+  return {
+    title: '',
+    type: 'expense',
+    amount: '',
+    date: getDefaultDateForMonth(monthKey),
+    category: 'House',
+    notes: '',
+    isRecurring: false,
+  }
+}
+
+// This helper adds months while keeping the original day when possible.
+function addMonthsToDate(dateString, monthsToAdd) {
+  const [year, month, day] = dateString.split('-').map(Number)
+  const nextMonthDate = new Date(year, month - 1 + monthsToAdd, 1)
+  const lastDayOfNextMonth = new Date(nextMonthDate.getFullYear(), nextMonthDate.getMonth() + 1, 0).getDate()
+  const safeDay = Math.min(day, lastDayOfNextMonth)
+
+  return `${nextMonthDate.getFullYear()}-${String(nextMonthDate.getMonth() + 1).padStart(2, '0')}-${String(
+    safeDay,
+  ).padStart(2, '0')}`
+}
+
+// This helper expands one recurring expense into monthly entries for the next two years.
+function createRecurringTransactions(baseTransaction) {
+  const seriesId = crypto.randomUUID()
+
+  return Array.from({ length: RECURRING_MONTH_COUNT }, (_, index) => ({
+    ...baseTransaction,
+    id: crypto.randomUUID(),
+    date: addMonthsToDate(baseTransaction.date, index),
+    seriesId,
+    recurrenceIndex: index,
+  }))
+}
+
 // This helper sorts transactions by date, then by title, to keep rendering stable.
 function sortTransactions(items) {
   return [...items].sort((left, right) => {
@@ -386,7 +425,7 @@ function SummaryStat({ label, value, tone, hideAmounts }) {
 }
 
 // This component renders one category card at a time.
-function CategoryCard({ group, hideAmounts, onDeleteTransaction }) {
+function CategoryCard({ group, hideAmounts, onDeleteTransaction, onEditTransaction }) {
   return (
     <article
       className={`category-card ${group.type}`}
@@ -406,13 +445,18 @@ function CategoryCard({ group, hideAmounts, onDeleteTransaction }) {
       <div className="category-card__list">
         {group.transactions.map((transaction) => (
           <div className="transaction-row" key={transaction.id}>
-            <div>
+            <button
+              className="transaction-row__content"
+              type="button"
+              onClick={() => onEditTransaction(transaction)}
+            >
               <strong>{transaction.title}</strong>
               <p>
                 {formatShortDate(transaction.date)}
                 {transaction.notes ? ` • ${transaction.notes}` : ''}
+                {transaction.seriesId ? ' • Recurring' : ''}
               </p>
-            </div>
+            </button>
 
             <div className="transaction-row__meta">
               <span className={transaction.type === 'income' ? 'amount-positive' : 'amount-negative'}>
@@ -422,7 +466,7 @@ function CategoryCard({ group, hideAmounts, onDeleteTransaction }) {
               <button
                 className="ghost-button"
                 type="button"
-                onClick={() => onDeleteTransaction(transaction.id)}
+                onClick={() => onDeleteTransaction(transaction)}
               >
                 Delete
               </button>
@@ -447,15 +491,11 @@ function App() {
   // This state controls whether the bottom add-entry composer is open.
   const [isEntryOpen, setIsEntryOpen] = useState(false)
 
+  // This state tracks whether the bottom composer is editing an existing transaction.
+  const [editingTransactionId, setEditingTransactionId] = useState(null)
+
   // This state controls the add-transaction form inputs.
-  const [formState, setFormState] = useState(() => ({
-    title: '',
-    type: 'expense',
-    amount: '',
-    date: getDefaultDateForMonth(getInitialMonth()),
-    category: 'House',
-    notes: '',
-  }))
+  const [formState, setFormState] = useState(() => createEmptyForm(getInitialMonth()))
 
   // This effect saves transactions whenever the list changes.
   useEffect(() => {
@@ -496,6 +536,13 @@ function App() {
   // This list powers the "Upcoming payments" section for the selected month.
   const upcomingTransactions = expenseTransactions.slice(0, 5)
 
+  // This helper restores the composer to its default add-entry state.
+  function resetComposer(monthKey = selectedMonth) {
+    setEditingTransactionId(null)
+    setFormState(createEmptyForm(monthKey))
+    setIsEntryOpen(false)
+  }
+
   // This handler updates form fields as the user types.
   function handleInputChange(event) {
     const { name, value } = event.target
@@ -506,6 +553,7 @@ function App() {
         return {
           ...currentForm,
           type: value,
+          isRecurring: value === 'income' ? false : currentForm.isRecurring,
           category:
             value === 'income' && currentForm.category === 'House'
               ? 'Income'
@@ -522,8 +570,8 @@ function App() {
     })
   }
 
-  // This handler adds a new transaction to the list.
-  function handleAddTransaction(event) {
+  // This handler either creates a new transaction or updates the one being edited.
+  function handleSaveTransaction(event) {
     event.preventDefault()
 
     const amount = Number(formState.amount)
@@ -542,24 +590,110 @@ function App() {
       notes: formState.notes.trim(),
     }
 
-    setTransactions((currentTransactions) => [...currentTransactions, nextTransaction])
-    setSelectedMonth(getMonthKey(formState.date))
-    setIsEntryOpen(false)
+    const targetMonth = getMonthKey(formState.date)
 
-    // We clear only the fields that should change most often between entries.
-    setFormState((currentForm) => ({
-      ...currentForm,
-      title: '',
-      amount: '',
-      notes: '',
-    }))
+    if (editingTransactionId) {
+      setTransactions((currentTransactions) =>
+        currentTransactions.map((transaction) =>
+          transaction.id === editingTransactionId
+            ? {
+                ...transaction,
+                title: nextTransaction.title,
+                type: nextTransaction.type,
+                amount: nextTransaction.amount,
+                date: nextTransaction.date,
+                category: nextTransaction.category,
+                notes: nextTransaction.notes,
+              }
+            : transaction,
+        ),
+      )
+    } else if (formState.type === 'expense' && formState.isRecurring) {
+      setTransactions((currentTransactions) => [
+        ...currentTransactions,
+        ...createRecurringTransactions({
+          ...nextTransaction,
+          type: 'expense',
+        }),
+      ])
+    } else {
+      setTransactions((currentTransactions) => [...currentTransactions, nextTransaction])
+    }
+
+    setSelectedMonth(targetMonth)
+    resetComposer(targetMonth)
   }
 
-  // This handler deletes one transaction without disturbing the others.
-  function handleDeleteTransaction(transactionId) {
-    setTransactions((currentTransactions) =>
-      currentTransactions.filter((transaction) => transaction.id !== transactionId),
+  // This handler opens the existing composer and fills it with the selected transaction.
+  function handleEditTransaction(transaction) {
+    setEditingTransactionId(transaction.id)
+    setSelectedMonth(getMonthKey(transaction.date))
+    setFormState({
+      title: transaction.title,
+      type: transaction.type,
+      amount: String(transaction.amount),
+      date: transaction.date,
+      category: transaction.category,
+      notes: transaction.notes ?? '',
+      isRecurring: Boolean(transaction.seriesId),
+    })
+    setIsEntryOpen(true)
+  }
+
+  // This handler deletes single entries or trims a recurring series from the selected point forward.
+  function handleDeleteTransaction(transactionToDelete) {
+    if (!transactionToDelete.seriesId) {
+      setTransactions((currentTransactions) =>
+        currentTransactions.filter((transaction) => transaction.id !== transactionToDelete.id),
+      )
+
+      if (editingTransactionId === transactionToDelete.id) {
+        resetComposer(getMonthKey(transactionToDelete.date))
+      }
+
+      return
+    }
+
+    const deleteChoice = window.prompt(
+      "This is a recurring expense. Type 'one' to delete only this expense, or 'future' to delete this one and all future expenses.",
+      'one',
     )
+
+    if (!deleteChoice) {
+      return
+    }
+
+    const normalizedChoice = deleteChoice.trim().toLowerCase()
+
+    if (normalizedChoice !== 'one' && normalizedChoice !== 'future') {
+      return
+    }
+
+    const editedTransaction = transactions.find((transaction) => transaction.id === editingTransactionId)
+
+    setTransactions((currentTransactions) =>
+      currentTransactions.filter((transaction) => {
+        if (transaction.seriesId !== transactionToDelete.seriesId) {
+          return true
+        }
+
+        if (normalizedChoice === 'one') {
+          return transaction.id !== transactionToDelete.id
+        }
+
+        return transaction.recurrenceIndex < transactionToDelete.recurrenceIndex
+      }),
+    )
+
+    if (
+      editedTransaction &&
+      editedTransaction.seriesId === transactionToDelete.seriesId &&
+      (normalizedChoice === 'one'
+        ? editedTransaction.id === transactionToDelete.id
+        : editedTransaction.recurrenceIndex >= transactionToDelete.recurrenceIndex)
+    ) {
+      resetComposer(getMonthKey(transactionToDelete.date))
+    }
   }
 
   // This handler keeps month navigation and the form date moving together.
@@ -567,10 +701,15 @@ function App() {
     const nextMonth = shiftMonth(selectedMonth, step)
 
     setSelectedMonth(nextMonth)
-    setFormState((currentForm) => ({
-      ...currentForm,
-      date: getDefaultDateForMonth(nextMonth),
-    }))
+    setFormState((currentForm) =>
+      editingTransactionId
+        ? createEmptyForm(nextMonth)
+        : {
+            ...currentForm,
+            date: getDefaultDateForMonth(nextMonth),
+          },
+    )
+    setEditingTransactionId(null)
   }
 
   return (
@@ -649,13 +788,18 @@ function App() {
           <div className="upcoming-list">
             {upcomingTransactions.map((transaction) => (
               <div className="upcoming-row" key={transaction.id}>
-                <div>
+                <button
+                  className="transaction-row__content"
+                  type="button"
+                  onClick={() => handleEditTransaction(transaction)}
+                >
                   <strong>{transaction.title}</strong>
                   <p>
                     {transaction.category}
                     {transaction.notes ? ` • ${transaction.notes}` : ''}
+                    {transaction.seriesId ? ' • Recurring' : ''}
                   </p>
-                </div>
+                </button>
                 <div className="upcoming-row__meta">
                   <span>{formatShortDate(transaction.date)}</span>
                   <strong className="amount-negative">-{formatCurrency(transaction.amount, hideAmounts)}</strong>
@@ -689,6 +833,7 @@ function App() {
                 hideAmounts={hideAmounts}
                 key={group.category}
                 onDeleteTransaction={handleDeleteTransaction}
+                onEditTransaction={handleEditTransaction}
               />
             ))}
           </div>
@@ -711,19 +856,19 @@ function App() {
           <>
             <div className="panel__title">
               <div>
-                <p className="eyebrow">Add new entry</p>
-                <h3>Income and expenses</h3>
+                <p className="eyebrow">{editingTransactionId ? 'Edit entry' : 'Add new entry'}</p>
+                <h3>{editingTransactionId ? 'Update transaction' : 'Income and expenses'}</h3>
               </div>
 
               <div className="composer-actions">
                 <span className="chip">Saved locally</span>
-                <button className="ghost-button" type="button" onClick={() => setIsEntryOpen(false)}>
+                <button className="ghost-button" type="button" onClick={() => resetComposer()}>
                   Close
                 </button>
               </div>
             </div>
 
-            <form className="transaction-form" onSubmit={handleAddTransaction}>
+            <form className="transaction-form" onSubmit={handleSaveTransaction}>
               <label>
                 Title
                 <input
@@ -793,8 +938,25 @@ function App() {
                 />
               </label>
 
+              {formState.type === 'expense' && !editingTransactionId ? (
+                <label className="checkbox-row">
+                  <input
+                    checked={formState.isRecurring}
+                    name="isRecurring"
+                    type="checkbox"
+                    onChange={(event) =>
+                      setFormState((currentForm) => ({
+                        ...currentForm,
+                        isRecurring: event.target.checked,
+                      }))
+                    }
+                  />
+                  <span>Create this expense for the next months automatically</span>
+                </label>
+              ) : null}
+
               <button className="primary-button" type="submit">
-                Add transaction
+                {editingTransactionId ? 'Save changes' : 'Add transaction'}
               </button>
             </form>
           </>
