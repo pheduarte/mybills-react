@@ -59,8 +59,9 @@
 }
 
 .topbar h1 {
-  font-size: clamp(2.7rem, 10vw, 4.2rem);
+  font-size: clamp(2.7rem, 10vw, 2.2rem);
   line-height: 0.92;
+  color: var(--app-title);
 }
 
 .eyebrow {
@@ -85,13 +86,13 @@
 .icon-button {
   min-height: 44px;
   padding: 0 16px;
-  background: rgba(255, 255, 255, 0.78);
+  background: var(--icon-button-bg);
   color: var(--text-strong);
-  box-shadow: 0 10px 30px rgba(36, 45, 71, 0.1);
+  box-shadow: var(--icon-button-shadow);
 }
 
 .icon-button--soft {
-  background: rgba(243, 245, 255, 0.9);
+  background: var(--icon-button-soft-bg);
 }
 
 .primary-button {
@@ -106,8 +107,8 @@
 .ghost-button {
   min-height: 34px;
   padding: 0 12px;
-  background: rgba(42, 15, 18, 0.08);
-  color: var(--muted);
+  background: var(--ghost-bg);
+  color: var(--ghost-text);
 }
 
 .ghost-button--session {
@@ -121,15 +122,25 @@
   justify-content: center;
   min-height: 32px;
   padding: 0 12px;
-  background: rgba(116, 214, 108, 0.15);
-  color: #2f6d33;
+  background: var(--chip-bg);
+  color: var(--chip-text);
   font-size: 0.82rem;
   font-weight: 700;
 }
 
 .chip--cloud {
-  background: rgba(129, 213, 255, 0.18);
-  color: #2d6381;
+  background: var(--chip-cloud-bg);
+  color: var(--chip-cloud-text);
+}
+
+.theme-chip {
+  min-width: 32px;
+  padding: 0 10px;
+}
+
+.theme-chip__icon {
+  font-size: 0.95rem;
+  line-height: 1;
 }
 
 /* These panels are the main card surfaces used throughout the app. */
@@ -137,9 +148,9 @@
 .panel,
 .category-card {
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow: 0 20px 45px rgba(95, 110, 145, 0.14);
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--surface-shadow);
   backdrop-filter: blur(18px);
 }
 
@@ -177,7 +188,7 @@
 
 .progress-card {
   border-radius: 24px;
-  background: rgba(243, 245, 252, 0.95);
+  background: var(--surface-soft);
   padding: 15px;
   display: grid;
   gap: 14px;
@@ -188,7 +199,7 @@
   display: flex;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(214, 219, 232, 0.9);
+  background: var(--progress-track);
 }
 
 .progress-bar__income {
@@ -196,7 +207,7 @@
 }
 
 .progress-bar__expense {
-  background: linear-gradient(90deg, #ced6e7 0%, #b7c0d6 100%);
+  background: linear-gradient(90deg, var(--progress-expense-start) 0%, var(--progress-expense-end) 100%);
 }
 
 .summary-grid {
@@ -212,7 +223,7 @@
   align-items: center;
   padding: 12px;
   border-radius: 22px;
-  background: white;
+  background: var(--card-inner-bg);
 }
 
 .summary-icon {
@@ -227,13 +238,13 @@
 }
 
 .summary-icon.income {
-  background: rgba(116, 214, 108, 0.18);
-  color: #2f6d33;
+  background: var(--status-paid-bg);
+  color: var(--positive);
 }
 
 .summary-icon.expense {
-  background: rgba(159, 170, 194, 0.2);
-  color: #5f6c86;
+  background: var(--status-unpaid-bg);
+  color: var(--status-unpaid-text);
 }
 
 .summary-label {
@@ -264,11 +275,11 @@
 }
 
 .balance-row.positive strong {
-  color: #2f6d33;
+  color: var(--positive);
 }
 
 .balance-row.negative strong {
-  color: #5c647c;
+  color: var(--negative);
 }
 
 /* The form uses a simple stacked mobile layout with two-column rows where space allows. */
@@ -293,7 +304,7 @@
 
 .auth-error {
   margin: 0;
-  color: #b42318;
+  color: var(--danger);
   font-size: 0.92rem;
 }
 
@@ -301,7 +312,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #315b8a;
+  color: var(--link);
   font: inherit;
   font-weight: 700;
   text-align: left;
@@ -322,8 +333,8 @@
   margin: 0;
   padding: 12px 14px;
   border-radius: 18px;
-  background: rgba(255, 184, 0, 0.14);
-  color: #8a5a00;
+  background: var(--warning-bg);
+  color: var(--warning-text);
   font-size: 0.92rem;
 }
 
@@ -343,14 +354,12 @@
   display: grid;
   gap: 2px;
   padding: 14px 18px;
-  border: 1.5px solid rgba(137, 148, 176, 0.28);
+  border: 1.5px solid var(--composer-trigger-border);
   border-radius: 22px;
   text-align: left;
-  background: rgba(248, 250, 255, 0.96);
+  background: var(--composer-trigger-bg);
   color: var(--text-strong);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.72),
-    0 12px 28px rgba(57, 68, 92, 0.08);
+  box-shadow: var(--composer-trigger-shadow);
 }
 
 .composer-trigger__label {
@@ -363,7 +372,7 @@
 
 .composer-trigger__placeholder {
   font-size: 1rem;
-  color: #8a93a8;
+  color: var(--placeholder);
 }
 
 .composer-actions {
@@ -400,8 +409,8 @@
   min-height: 50px;
   padding: 0 16px;
   border-radius: 18px;
-  border: 1px solid rgba(164, 173, 196, 0.4);
-  background: rgba(248, 250, 255, 0.95);
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
   color: var(--text-strong);
   /* iPhone Safari zooms focused fields when the computed font size is under 16px. */
   font-family: inherit;
@@ -416,7 +425,7 @@
 .icon-button:focus,
 .primary-button:focus,
 .ghost-button:focus {
-  outline: 2px solid rgba(17, 24, 39, 0.18);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -432,7 +441,7 @@
   gap: 12px;
   align-items: flex-start;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(156, 167, 189, 0.16);
+  border-bottom: 1px solid var(--divider);
 }
 
 .upcoming-row:last-child,
@@ -469,8 +478,8 @@
 }
 
 .upcoming-row__action--paid {
-  background: rgba(116, 214, 108, 0.15);
-  color: #2f6d33;
+  background: var(--status-paid-bg);
+  color: var(--positive);
 }
 
 .status-chip {
@@ -485,13 +494,13 @@
 }
 
 .status-chip.paid {
-  background: rgba(116, 214, 108, 0.18);
-  color: #2f6d33;
+  background: var(--status-paid-bg);
+  color: var(--status-paid-text);
 }
 
 .status-chip.unpaid {
-  background: rgba(159, 170, 194, 0.18);
-  color: #5f6c86;
+  background: var(--status-unpaid-bg);
+  color: var(--status-unpaid-text);
 }
 
 .transaction-row__content {
@@ -523,15 +532,15 @@
   height: 20px;
   min-height: 20px;
   margin: 0;
-  accent-color: #2f6d33;
+  accent-color: var(--positive);
 }
 
 .secondary-delete-button {
   min-height: 46px;
   border: 0;
   border-radius: 18px;
-  background: rgba(180, 35, 24, 0.12);
-  color: #b42318;
+  background: var(--danger-bg);
+  color: var(--danger);
   font: inherit;
   font-weight: 700;
 }
@@ -571,11 +580,11 @@
 }
 
 .amount-positive {
-  color: #2f6d33;
+  color: var(--positive);
 }
 
 .amount-negative {
-  color: #5c647c;
+  color: var(--negative);
 }
 
 /* This empty state appears when a month has no matching transactions. */

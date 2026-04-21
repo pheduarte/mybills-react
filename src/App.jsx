@@ -22,9 +22,14 @@ import {
 } from './utils/transactions'
 import { getInitialMonth } from './utils/storage'
 
+const THEME_STORAGE_KEY = 'mybills-theme-v1'
+
 function App() {
   // This state tracks which month the dashboard should show.
   const [selectedMonth, setSelectedMonth] = useState(getInitialMonth)
+
+  // This state stores whether the interface should use the light or dark palette.
+  const [theme, setTheme] = useState(() => localStorage.getItem(THEME_STORAGE_KEY) ?? 'light')
 
   // This state lets the user hide balances when sharing the screen.
   const [hideAmounts, setHideAmounts] = useState(false)
@@ -65,6 +70,12 @@ function App() {
   useEffect(() => {
     localStorage.setItem(MONTH_STORAGE_KEY, selectedMonth)
   }, [selectedMonth])
+
+  // This effect applies the chosen theme across the whole app, including auth screens.
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    localStorage.setItem(THEME_STORAGE_KEY, theme)
+  }, [theme])
 
   // This derived list contains only the transactions for the visible month.
   const monthTransactions = sortTransactions(
@@ -367,6 +378,17 @@ function App() {
         </div>
 
         <div className="topbar__actions">
+          <button
+            className="chip theme-chip"
+            type="button"
+            onClick={() => setTheme((currentTheme) => (currentTheme === 'light' ? 'dark' : 'light'))}
+            aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+          >
+            <span className="theme-chip__icon" aria-hidden="true">
+              {theme === 'light' ? '☾' : '☀'}
+            </span>
+          </button>
           <button className="ghost-button ghost-button--session" type="button" onClick={handleSignOut}>
             Sign out
           </button>

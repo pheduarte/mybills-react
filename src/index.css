@@ -6,16 +6,110 @@
   line-height: 1.5;
   font-weight: 400;
   color: #1d2433;
-  background:
-    radial-gradient(circle at top left, rgba(184, 228, 255, 0.8), transparent 40%),
-    radial-gradient(circle at top right, rgba(176, 242, 203, 0.85), transparent 35%),
-    linear-gradient(180deg, #eef3ff 0%, #f6f7fb 48%, #eef2f9 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   --text-strong: #121a2b;
   --muted: #6c768d;
+  --page-bg-solid: #eef3ff;
+  --page-bg:
+    radial-gradient(circle at top left, rgba(184, 228, 255, 0.8), transparent 40%),
+    radial-gradient(circle at top right, rgba(176, 242, 203, 0.85), transparent 35%),
+    linear-gradient(180deg, #eef3ff 0%, #f6f7fb 48%, #eef2f9 100%);
+  --app-title: #17763bbe;
+  --surface-bg: rgba(255, 255, 255, 0.82);
+  --surface-border: rgba(255, 255, 255, 0.7);
+  --surface-shadow: 0 20px 45px rgba(95, 110, 145, 0.14);
+  --surface-soft: rgba(243, 245, 252, 0.95);
+  --card-inner-bg: #ffffff;
+  --icon-button-bg: rgba(255, 255, 255, 0.78);
+  --icon-button-soft-bg: rgba(243, 245, 255, 0.9);
+  --icon-button-shadow: 0 10px 30px rgba(36, 45, 71, 0.1);
+  --ghost-bg: rgba(42, 15, 18, 0.08);
+  --ghost-text: var(--muted);
+  --chip-bg: rgba(116, 214, 108, 0.15);
+  --chip-text: #2f6d33;
+  --chip-cloud-bg: rgba(129, 213, 255, 0.18);
+  --chip-cloud-text: #2d6381;
+  --progress-track: rgba(214, 219, 232, 0.9);
+  --progress-expense-start: #ced6e7;
+  --progress-expense-end: #b7c0d6;
+  --positive: #2f6d33;
+  --negative: #5c647c;
+  --danger: #b42318;
+  --danger-bg: rgba(180, 35, 24, 0.12);
+  --link: #315b8a;
+  --warning-bg: rgba(255, 184, 0, 0.14);
+  --warning-text: #8a5a00;
+  --composer-trigger-border: rgba(137, 148, 176, 0.28);
+  --composer-trigger-bg: rgba(248, 250, 255, 0.96);
+  --composer-trigger-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.72),
+    0 12px 28px rgba(57, 68, 92, 0.08);
+  --placeholder: #8a93a8;
+  --input-border: rgba(164, 173, 196, 0.4);
+  --input-bg: rgba(248, 250, 255, 0.95);
+  --focus-ring: rgba(17, 24, 39, 0.18);
+  --divider: rgba(156, 167, 189, 0.16);
+  --status-paid-bg: rgba(116, 214, 108, 0.18);
+  --status-paid-text: #2f6d33;
+  --status-unpaid-bg: rgba(159, 170, 194, 0.18);
+  --status-unpaid-text: #5f6c86;
+  --hover-shadow: 0 12px 30px rgba(57, 68, 92, 0.08);
+  background: var(--page-bg);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  color: #edf2ff;
+  --text-strong: #edf2ff;
+  --muted: #a4aec7;
+  --page-bg-solid: #0b1220;
+  --page-bg:
+    radial-gradient(circle at top left, rgba(51, 109, 170, 0.28), transparent 38%),
+    radial-gradient(circle at top right, rgba(34, 111, 82, 0.24), transparent 34%),
+    linear-gradient(180deg, #08101d 0%, #0d1524 52%, #10192b 100%);
+  --app-title: #d8e6ff;
+  --surface-bg: rgba(14, 22, 37, 0.84);
+  --surface-border: rgba(126, 149, 190, 0.18);
+  --surface-shadow: 0 24px 50px rgba(0, 0, 0, 0.34);
+  --surface-soft: rgba(21, 31, 48, 0.94);
+  --card-inner-bg: rgba(12, 19, 31, 0.88);
+  --icon-button-bg: rgba(23, 34, 53, 0.88);
+  --icon-button-soft-bg: rgba(29, 40, 61, 0.92);
+  --icon-button-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+  --ghost-bg: rgba(185, 198, 228, 0.12);
+  --ghost-text: #d5dff5;
+  --chip-bg: rgba(116, 214, 108, 0.2);
+  --chip-text: #8fe289;
+  --chip-cloud-bg: rgba(129, 213, 255, 0.18);
+  --chip-cloud-text: #8bd7f7;
+  --progress-track: rgba(54, 67, 93, 0.92);
+  --progress-expense-start: #55627f;
+  --progress-expense-end: #46526d;
+  --positive: #8fe289;
+  --negative: #b3bfdc;
+  --danger: #ff9082;
+  --danger-bg: rgba(255, 144, 130, 0.12);
+  --link: #9fcaff;
+  --warning-bg: rgba(255, 184, 0, 0.16);
+  --warning-text: #f6c566;
+  --composer-trigger-border: rgba(107, 128, 166, 0.32);
+  --composer-trigger-bg: rgba(17, 25, 40, 0.96);
+  --composer-trigger-shadow:
+    inset 0 0 0 1px rgba(175, 189, 222, 0.06),
+    0 14px 30px rgba(0, 0, 0, 0.26);
+  --placeholder: #8794b4;
+  --input-border: rgba(97, 117, 151, 0.42);
+  --input-bg: rgba(13, 21, 34, 0.96);
+  --focus-ring: rgba(159, 202, 255, 0.32);
+  --divider: rgba(113, 129, 161, 0.18);
+  --status-paid-bg: rgba(116, 214, 108, 0.2);
+  --status-paid-text: #8fe289;
+  --status-unpaid-bg: rgba(185, 198, 228, 0.14);
+  --status-unpaid-text: #c6d0ea;
+  --hover-shadow: 0 14px 32px rgba(0, 0, 0, 0.22);
 }
 
 /* We reset the page so the app can fully control the mobile layout. */
@@ -24,13 +118,15 @@
 }
 
 html {
-  background: #eef3ff;
+  background: var(--page-bg-solid);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100svh;
+  background: var(--page-bg);
+  color: var(--text-strong);
 }
 
 body,
@@ -64,7 +160,7 @@ select {
 button:hover,
 input:hover,
 select:hover {
-  box-shadow: 0 12px 30px rgba(57, 68, 92, 0.08);
+  box-shadow: var(--hover-shadow);
 }
 
 #root {

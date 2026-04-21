@@ -35,7 +35,7 @@ function UpcomingPaymentsSection({ hideAmounts, upcomingTransactions, onEditTran
                   type="button"
                   onClick={() => onTogglePaid(transaction.id)}
                 >
-                  {transaction.isPaid ? 'Mark unpaid' : 'Confirm payment'}
+                  {transaction.isPaid ? 'Unpaid' : 'Pay'}
                 </button>
               </div>
 
