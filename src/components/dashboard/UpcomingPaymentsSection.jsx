@@ -6,7 +6,6 @@ function UpcomingPaymentsSection({ hideAmounts, upcomingTransactions, onEditTran
     <section className="panel">
       <div className="panel__title">
         <div>
-          <p className="eyebrow">Month timeline</p>
           <h3>Upcoming payments</h3>
         </div>
         <span className="chip">{upcomingTransactions.length} items</span>
