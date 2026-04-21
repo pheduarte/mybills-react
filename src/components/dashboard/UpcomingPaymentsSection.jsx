@@ -16,23 +16,35 @@ function UpcomingPaymentsSection({ hideAmounts, upcomingTransactions, onEditTran
         <div className="upcoming-list">
           {upcomingTransactions.map((transaction) => (
             <div className="upcoming-row" key={transaction.id}>
-              <button className="transaction-row__content" type="button" onClick={() => onEditTransaction(transaction)}>
-                <strong>{transaction.title}</strong>
-                <p>
-                  {transaction.category}
-                  {transaction.notes ? ` • ${transaction.notes}` : ''}
-                  {transaction.seriesId ? ' • Recurring' : ''}
-                </p>
-              </button>
+              <div className="upcoming-row__main">
+                <button
+                  className="transaction-row__content"
+                  type="button"
+                  onClick={() => onEditTransaction(transaction)}
+                >
+                  <strong>{transaction.title}</strong>
+                  <p>
+                    {transaction.category}
+                    {transaction.notes ? ` • ${transaction.notes}` : ''}
+                    {transaction.seriesId ? ' • Recurring' : ''}
+                  </p>
+                </button>
+
+                <button
+                  className={`ghost-button upcoming-row__action ${transaction.isPaid ? 'upcoming-row__action--paid' : ''}`}
+                  type="button"
+                  onClick={() => onTogglePaid(transaction.id)}
+                >
+                  {transaction.isPaid ? 'Mark unpaid' : 'Confirm payment'}
+                </button>
+              </div>
+
               <div className="upcoming-row__meta">
                 <span className={`status-chip ${transaction.isPaid ? 'paid' : 'unpaid'}`}>
                   {transaction.isPaid ? 'Paid' : 'Not paid'}
                 </span>
                 <span>{formatShortDate(transaction.date)}</span>
                 <strong className="amount-negative">-{formatCurrency(transaction.amount, hideAmounts)}</strong>
-                <button className="ghost-button" type="button" onClick={() => onTogglePaid(transaction.id)}>
-                  {transaction.isPaid ? 'Mark unpaid' : 'Confirm payment'}
-                </button>
               </div>
             </div>
           ))}

@@ -447,12 +447,30 @@
   color: var(--muted);
 }
 
+.upcoming-row__main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+
 .upcoming-row__meta,
 .transaction-row__meta {
   display: grid;
   justify-items: end;
   gap: 8px;
   text-align: right;
+}
+
+.upcoming-row__action {
+  min-height: 36px;
+  padding: 0 16px;
+}
+
+.upcoming-row__action--paid {
+  background: rgba(116, 214, 108, 0.15);
+  color: #2f6d33;
 }
 
 .status-chip {
