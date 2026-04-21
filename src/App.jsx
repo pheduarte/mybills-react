@@ -257,7 +257,20 @@ function createEmptyForm(monthKey) {
     category: 'House',
     notes: '',
     isRecurring: false,
+    isInstallment: false,
+    installmentCount: '3',
+    installmentFrequency: 'monthly',
   }
+}
+
+// This helper shifts a date by a fixed number of days for weekly-based schedules.
+function addDaysToDate(dateString, daysToAdd) {
+  const nextDate = new Date(`${dateString}T00:00:00`)
+  nextDate.setDate(nextDate.getDate() + daysToAdd)
+
+  return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}-${String(
+    nextDate.getDate(),
+  ).padStart(2, '0')}`
 }
 
 // This helper adds months while keeping the original day when possible.
@@ -283,6 +296,27 @@ function createRecurringTransactions(baseTransaction) {
     seriesId,
     recurrenceIndex: index,
   }))
+}
+
+// This helper expands one installment purchase into a fixed payment plan.
+function createInstallmentTransactions(baseTransaction, installmentCount, installmentFrequency) {
+  const totalInstallments = Number(installmentCount)
+
+  return Array.from({ length: totalInstallments }, (_, index) => {
+    const nextDate =
+      installmentFrequency === 'monthly'
+        ? addMonthsToDate(baseTransaction.date, index)
+        : addDaysToDate(baseTransaction.date, installmentFrequency === 'weekly' ? index * 7 : index * 14)
+
+    return {
+      ...baseTransaction,
+      id: crypto.randomUUID(),
+      date: nextDate,
+      notes: baseTransaction.notes
+        ? `${baseTransaction.notes} • Installment ${index + 1} of ${totalInstallments}`
+        : `Installment ${index + 1} of ${totalInstallments}`,
+    }
+  })
 }
 
 // This helper sorts transactions by date, then by title, to keep rendering stable.
@@ -554,6 +588,7 @@ function App() {
           ...currentForm,
           type: value,
           isRecurring: value === 'income' ? false : currentForm.isRecurring,
+          isInstallment: value === 'income' ? false : currentForm.isInstallment,
           category:
             value === 'income' && currentForm.category === 'House'
               ? 'Income'
@@ -608,6 +643,18 @@ function App() {
             : transaction,
         ),
       )
+    } else if (formState.type === 'expense' && formState.isInstallment) {
+      setTransactions((currentTransactions) => [
+        ...currentTransactions,
+        ...createInstallmentTransactions(
+          {
+            ...nextTransaction,
+            type: 'expense',
+          },
+          formState.installmentCount,
+          formState.installmentFrequency,
+        ),
+      ])
     } else if (formState.type === 'expense' && formState.isRecurring) {
       setTransactions((currentTransactions) => [
         ...currentTransactions,
@@ -939,20 +986,71 @@ function App() {
               </label>
 
               {formState.type === 'expense' && !editingTransactionId ? (
-                <label className="checkbox-row">
-                  <input
-                    checked={formState.isRecurring}
-                    name="isRecurring"
-                    type="checkbox"
-                    onChange={(event) =>
-                      setFormState((currentForm) => ({
-                        ...currentForm,
-                        isRecurring: event.target.checked,
-                      }))
-                    }
-                  />
-                  <span>Create this expense for the next months automatically</span>
-                </label>
+                <>
+                  <label className="checkbox-row">
+                    <input
+                      checked={formState.isRecurring}
+                      name="isRecurring"
+                      type="checkbox"
+                      onChange={(event) =>
+                        setFormState((currentForm) => ({
+                          ...currentForm,
+                          isRecurring: event.target.checked,
+                          isInstallment: event.target.checked ? false : currentForm.isInstallment,
+                        }))
+                      }
+                    />
+                    <span>Create this expense for the next months automatically</span>
+                  </label>
+
+                  <label className="checkbox-row">
+                    <input
+                      checked={formState.isInstallment}
+                      name="isInstallment"
+                      type="checkbox"
+                      onChange={(event) =>
+                        setFormState((currentForm) => ({
+                          ...currentForm,
+                          isInstallment: event.target.checked,
+                          isRecurring: event.target.checked ? false : currentForm.isRecurring,
+                        }))
+                      }
+                    />
+                    <span>Split this expense into installments</span>
+                  </label>
+
+                  {formState.isInstallment ? (
+                    <div className="form-row">
+                      <label>
+                        Payments
+                        <select
+                          name="installmentCount"
+                          value={formState.installmentCount}
+                          onChange={handleInputChange}
+                        >
+                          {Array.from({ length: 23 }, (_, index) => String(index + 2)).map((count) => (
+                            <option key={count} value={count}>
+                              {count} payments
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label>
+                        Frequency
+                        <select
+                          name="installmentFrequency"
+                          value={formState.installmentFrequency}
+                          onChange={handleInputChange}
+                        >
+                          <option value="weekly">Weekly</option>
+                          <option value="fortnightly">Fortnightly</option>
+                          <option value="monthly">Monthly</option>
+                        </select>
+                      </label>
+                    </div>
+                  ) : null}
+                </>
               ) : null}
 
               <button className="primary-button" type="submit">
