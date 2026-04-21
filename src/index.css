@@ -14,10 +14,10 @@
   --muted: #6c768d;
   --page-bg-solid: #eef3ff;
   --page-bg:
-    radial-gradient(circle at top left, rgba(184, 228, 255, 0.8), transparent 40%),
-    radial-gradient(circle at top right, rgba(176, 242, 203, 0.85), transparent 35%),
+    radial-gradient(circle at top left, rgba(3, 80, 128, 0.8), transparent 40%),
+    radial-gradient(circle at top right, rgba(2, 117, 49, 0.85), transparent 35%),
     linear-gradient(180deg, #eef3ff 0%, #f6f7fb 48%, #eef2f9 100%);
-  --app-title: #17763bbe;
+  --app-title: #ffffff;
   --surface-bg: rgba(255, 255, 255, 0.82);
   --surface-border: rgba(255, 255, 255, 0.7);
   --surface-shadow: 0 20px 45px rgba(95, 110, 145, 0.14);
@@ -70,7 +70,7 @@
     radial-gradient(circle at top left, rgba(51, 109, 170, 0.28), transparent 38%),
     radial-gradient(circle at top right, rgba(34, 111, 82, 0.24), transparent 34%),
     linear-gradient(180deg, #08101d 0%, #0d1524 52%, #10192b 100%);
-  --app-title: #d8e6ff;
+  --app-title: #ffd8dd;
   --surface-bg: rgba(14, 22, 37, 0.84);
   --surface-border: rgba(126, 149, 190, 0.18);
   --surface-shadow: 0 24px 50px rgba(0, 0, 0, 0.34);

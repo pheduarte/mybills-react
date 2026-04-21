@@ -8,7 +8,7 @@ function CategoriesSection({ categoryGroups, hideAmounts, selectedMonth, onEditT
       <div className="section-heading">
         <div>
           <p className="eyebrow">Monthly breakdown</p>
-          <h3>Category cards</h3>
+          <h3>Categories</h3>
         </div>
         <span className="chip">{categoryGroups.length} groups</span>
       </div>
