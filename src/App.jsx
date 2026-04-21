@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
+import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth'
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { auth, db, isFirebaseConfigured, missingFirebaseEnvKeys } from './firebase'
 import './App.css'
 
-// These localStorage keys let the app remember data between refreshes.
+// This local key helps migrate your existing device-only data into Firestore the first time.
 const STORAGE_KEY = 'mybills-transactions-v1'
 const MONTH_STORAGE_KEY = 'mybills-selected-month-v1'
 const RECURRING_MONTH_COUNT = 24
@@ -445,6 +448,11 @@ function getInitialMonth() {
   return getMonthKey(new Date().toISOString())
 }
 
+// This helper points every signed-in user to their own private Firestore document.
+function getUserDataDoc(userId) {
+  return doc(db, 'users', userId, 'private', 'myBills')
+}
+
 // This small presentational component keeps our stat cards consistent.
 function SummaryStat({ label, value, tone, hideAmounts }) {
   return (
@@ -455,6 +463,115 @@ function SummaryStat({ label, value, tone, hideAmounts }) {
         <strong>{formatCurrency(value, hideAmounts)}</strong>
       </div>
     </div>
+  )
+}
+
+// This screen appears until Firebase is configured with real project credentials.
+function FirebaseSetupPanel() {
+  return (
+    <main className="app-shell app-shell--centered">
+      <section className="panel auth-panel">
+        <p className="eyebrow">Firebase setup</p>
+        <h3>Connect MyBills to Firebase</h3>
+        <p className="auth-copy">
+          Add your Firebase web app credentials to a local <code>.env</code> file and to Vercel environment
+          variables before signing in.
+        </p>
+
+        <div className="setup-block">
+          <strong>Missing variables</strong>
+          <ul className="setup-list">
+            {missingFirebaseEnvKeys.map((key) => (
+              <li key={key}>{key}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="setup-block">
+          <strong>Firebase console checklist</strong>
+          <p>Enable Email/Password sign-in in Authentication and create a Firestore database in production mode.</p>
+        </div>
+      </section>
+    </main>
+  )
+}
+
+// This screen is reused while checking auth or loading the user’s cloud data.
+function LoadingPanel({ eyebrow, title, message }) {
+  return (
+    <main className="app-shell app-shell--centered">
+      <section className="panel auth-panel auth-panel--compact">
+        <p className="eyebrow">{eyebrow}</p>
+        <h3>{title}</h3>
+        <p className="auth-copy">{message}</p>
+      </section>
+    </main>
+  )
+}
+
+// This auth panel keeps sign in and account creation in a single small flow.
+function AuthPanel({
+  authMode,
+  authForm,
+  authError,
+  isAuthSubmitting,
+  onAuthFormChange,
+  onAuthSubmit,
+  onModeChange,
+}) {
+  return (
+    <main className="app-shell app-shell--centered">
+      <section className="panel auth-panel">
+        <div>
+          <p className="eyebrow">Cloud sync</p>
+          <h3>{authMode === 'signin' ? 'Sign in to MyBills' : 'Create your MyBills account'}</h3>
+        </div>
+
+        <p className="auth-copy">
+          Sign in to keep your bills, recurring expenses, and installments synced across all your devices.
+        </p>
+
+        <form className="transaction-form" onSubmit={onAuthSubmit}>
+          <label>
+            Email
+            <input
+              autoComplete="email"
+              name="email"
+              type="email"
+              placeholder="you@example.com"
+              value={authForm.email}
+              onChange={onAuthFormChange}
+            />
+          </label>
+
+          <label>
+            Password
+            <input
+              autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
+              name="password"
+              type="password"
+              placeholder="At least 6 characters"
+              value={authForm.password}
+              onChange={onAuthFormChange}
+            />
+          </label>
+
+          {authError ? <p className="auth-error">{authError}</p> : null}
+
+          <button className="primary-button" disabled={isAuthSubmitting} type="submit">
+            {isAuthSubmitting
+              ? 'Please wait...'
+              : authMode === 'signin'
+                ? 'Sign in'
+                : 'Create account'}
+          </button>
+        </form>
+
+        <button className="auth-switch" type="button" onClick={() => onModeChange(authMode === 'signin' ? 'signup' : 'signin')}>
+          {authMode === 'signin' ? 'Need an account? Create one' : 'Already have an account? Sign in'}
+        </button>
+      </section>
+    </main>
   )
 }
 
@@ -514,7 +631,7 @@ function CategoryCard({ group, hideAmounts, onDeleteTransaction, onEditTransacti
 
 function App() {
   // This state stores every income and expense in the app.
-  const [transactions, setTransactions] = useState(getInitialTransactions)
+  const [transactions, setTransactions] = useState([])
 
   // This state tracks which month the dashboard should show.
   const [selectedMonth, setSelectedMonth] = useState(getInitialMonth)
@@ -528,13 +645,135 @@ function App() {
   // This state tracks whether the bottom composer is editing an existing transaction.
   const [editingTransactionId, setEditingTransactionId] = useState(null)
 
+  // These auth states control the Firebase session flow.
+  const [user, setUser] = useState(null)
+  const [authMode, setAuthMode] = useState('signin')
+  const [authForm, setAuthForm] = useState({ email: '', password: '' })
+  const [authError, setAuthError] = useState('')
+  const [isAuthLoading, setIsAuthLoading] = useState(isFirebaseConfigured)
+  const [isAuthSubmitting, setIsAuthSubmitting] = useState(false)
+
+  // These sync states keep Firestore loading and error handling explicit.
+  const [isDataLoading, setIsDataLoading] = useState(false)
+  const [hasLoadedRemoteData, setHasLoadedRemoteData] = useState(false)
+  const [syncError, setSyncError] = useState('')
+
   // This state controls the add-transaction form inputs.
   const [formState, setFormState] = useState(() => createEmptyForm(getInitialMonth()))
 
-  // This effect saves transactions whenever the list changes.
+  // This effect listens for Firebase auth changes once on app start.
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions))
-  }, [transactions])
+    if (!auth) {
+      return undefined
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      setUser(nextUser)
+      setIsAuthLoading(false)
+      setAuthError('')
+
+      if (!nextUser) {
+        setTransactions([])
+        setHasLoadedRemoteData(false)
+        setEditingTransactionId(null)
+        setFormState(createEmptyForm(getInitialMonth()))
+        setIsEntryOpen(false)
+      }
+    })
+
+    return unsubscribe
+  }, [])
+
+  // This effect loads the signed-in user’s data from Firestore.
+  useEffect(() => {
+    let isCancelled = false
+
+    async function loadUserData() {
+      if (!user || !db) {
+        setIsDataLoading(false)
+        setHasLoadedRemoteData(false)
+        return
+      }
+
+      setIsDataLoading(true)
+      setHasLoadedRemoteData(false)
+      setSyncError('')
+
+      try {
+        const userDataRef = getUserDataDoc(user.uid)
+        const snapshot = await getDoc(userDataRef)
+        const fallbackTransactions = getInitialTransactions()
+        const nextTransactions =
+          snapshot.exists() && Array.isArray(snapshot.data().transactions)
+            ? snapshot.data().transactions
+            : fallbackTransactions
+
+        if (!snapshot.exists()) {
+          await setDoc(
+            userDataRef,
+            {
+              transactions: nextTransactions,
+              email: user.email ?? '',
+              updatedAt: serverTimestamp(),
+            },
+            { merge: true },
+          )
+
+          // Once we migrate local data into Firestore, we no longer need the device-only copy.
+          localStorage.removeItem(STORAGE_KEY)
+        }
+
+        if (!isCancelled) {
+          setTransactions(nextTransactions)
+          setHasLoadedRemoteData(true)
+        }
+      } catch {
+        if (!isCancelled) {
+          setTransactions(getInitialTransactions())
+          setHasLoadedRemoteData(true)
+          setSyncError('We could not load your cloud data right now. Please try again.')
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsDataLoading(false)
+        }
+      }
+    }
+
+    loadUserData()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [user])
+
+  // This effect keeps Firestore updated after the initial user data has loaded.
+  useEffect(() => {
+    if (!user || !db || !hasLoadedRemoteData) {
+      return undefined
+    }
+
+    const syncTimeout = window.setTimeout(async () => {
+      try {
+        await setDoc(
+          getUserDataDoc(user.uid),
+          {
+            transactions,
+            email: user.email ?? '',
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true },
+        )
+        setSyncError('')
+      } catch {
+        setSyncError('Your latest changes could not be synced right now.')
+      }
+    }, 300)
+
+    return () => {
+      window.clearTimeout(syncTimeout)
+    }
+  }, [transactions, user, hasLoadedRemoteData])
 
   // This effect remembers the month the user viewed last.
   useEffect(() => {
@@ -575,6 +814,44 @@ function App() {
     setEditingTransactionId(null)
     setFormState(createEmptyForm(monthKey))
     setIsEntryOpen(false)
+  }
+
+  // This handler updates the small Firebase auth form.
+  function handleAuthFormChange(event) {
+    const { name, value } = event.target
+
+    setAuthForm((currentForm) => ({
+      ...currentForm,
+      [name]: value,
+    }))
+  }
+
+  // This handler signs in or creates an account with Firebase email/password auth.
+  async function handleAuthSubmit(event) {
+    event.preventDefault()
+    setAuthError('')
+    setIsAuthSubmitting(true)
+
+    try {
+      if (authMode === 'signin') {
+        await signInWithEmailAndPassword(auth, authForm.email.trim(), authForm.password)
+      } else {
+        await createUserWithEmailAndPassword(auth, authForm.email.trim(), authForm.password)
+      }
+    } catch (error) {
+      setAuthError(error.message ?? 'Authentication failed. Please check your email and password.')
+    } finally {
+      setIsAuthSubmitting(false)
+    }
+  }
+
+  // This handler closes the Firebase session and returns to the auth screen.
+  async function handleSignOut() {
+    if (!auth) {
+      return
+    }
+
+    await signOut(auth)
   }
 
   // This handler updates form fields as the user types.
@@ -759,6 +1036,44 @@ function App() {
     setEditingTransactionId(null)
   }
 
+  if (!isFirebaseConfigured) {
+    return <FirebaseSetupPanel />
+  }
+
+  if (isAuthLoading) {
+    return (
+      <LoadingPanel
+        eyebrow="Checking session"
+        title="Loading MyBills"
+        message="Connecting to Firebase Authentication..."
+      />
+    )
+  }
+
+  if (!user) {
+    return (
+      <AuthPanel
+        authError={authError}
+        authForm={authForm}
+        authMode={authMode}
+        isAuthSubmitting={isAuthSubmitting}
+        onAuthFormChange={handleAuthFormChange}
+        onAuthSubmit={handleAuthSubmit}
+        onModeChange={setAuthMode}
+      />
+    )
+  }
+
+  if (isDataLoading && !hasLoadedRemoteData) {
+    return (
+      <LoadingPanel
+        eyebrow="Cloud sync"
+        title="Loading your bills"
+        message="Fetching your transactions from Firestore..."
+      />
+    )
+  }
+
   return (
     <main className="app-shell">
       {/* This top area acts like a simple mobile app header. */}
@@ -767,14 +1082,21 @@ function App() {
           <h1>MyBills</h1>
         </div>
 
-        <button
-          className="icon-button"
-          type="button"
-          onClick={() => setHideAmounts((currentValue) => !currentValue)}
-        >
-          {hideAmounts ? 'Show' : 'Hide'}
-        </button>
+        <div className="topbar__actions">
+          <button className="ghost-button ghost-button--session" type="button" onClick={handleSignOut}>
+            Sign out
+          </button>
+          <button
+            className="icon-button"
+            type="button"
+            onClick={() => setHideAmounts((currentValue) => !currentValue)}
+          >
+            {hideAmounts ? 'Show' : 'Hide'}
+          </button>
+        </div>
       </header>
+
+      {syncError ? <p className="sync-banner">{syncError}</p> : null}
 
       {/* This hero card summarizes the selected month at a glance. */}
       <section className="hero-card">
@@ -908,9 +1230,9 @@ function App() {
               </div>
 
               <div className="composer-actions">
-                {/* <span className="chip">Saved locally</span> */}
+                <span className="chip chip--cloud">Cloud sync</span>
                 <button className="ghost-button" type="button" onClick={() => resetComposer()}>
-                  Close
+                  X
                 </button>
               </div>
             </div>

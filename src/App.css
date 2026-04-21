@@ -15,6 +15,10 @@
   gap: 18px;
 }
 
+.app-shell--centered {
+  justify-content: center;
+}
+
 /* This is the small app header at the top of the phone layout. */
 .topbar,
 .hero-card__header,
@@ -46,6 +50,12 @@
 .section-heading h3,
 .category-card h3 {
   margin: 0;
+}
+
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .topbar h1 {
@@ -96,8 +106,13 @@
 .ghost-button {
   min-height: 34px;
   padding: 0 12px;
-  background: rgba(15, 23, 42, 0.08);
+  background: rgba(42, 15, 18, 0.08);
   color: var(--muted);
+}
+
+.ghost-button--session {
+  min-height: 42px;
+  white-space: nowrap;
 }
 
 .chip {
@@ -110,6 +125,11 @@
   color: #2f6d33;
   font-size: 0.82rem;
   font-weight: 700;
+}
+
+.chip--cloud {
+  background: rgba(129, 213, 255, 0.18);
+  color: #2d6381;
 }
 
 /* These panels are the main card surfaces used throughout the app. */
@@ -256,6 +276,55 @@
   padding: 18px;
   display: grid;
   gap: 16px;
+}
+
+.auth-panel {
+  gap: 18px;
+}
+
+.auth-panel--compact {
+  text-align: center;
+}
+
+.auth-copy {
+  margin: 0;
+  color: var(--muted);
+}
+
+.auth-error {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.92rem;
+}
+
+.auth-switch {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #315b8a;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+}
+
+.setup-block {
+  display: grid;
+  gap: 8px;
+}
+
+.setup-list {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+}
+
+.sync-banner {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255, 184, 0, 0.14);
+  color: #8a5a00;
+  font-size: 0.92rem;
 }
 
 .composer {
@@ -491,7 +560,8 @@
   }
 
   .panel__title,
-  .composer-actions {
+  .composer-actions,
+  .topbar__actions {
     align-items: flex-start;
     flex-direction: column;
   }
