@@ -908,7 +908,7 @@ function App() {
               </div>
 
               <div className="composer-actions">
-                <span className="chip">Saved locally</span>
+                {/* <span className="chip">Saved locally</span> */}
                 <button className="ghost-button" type="button" onClick={() => resetComposer()}>
                   Close
                 </button>
@@ -1000,7 +1000,7 @@ function App() {
                         }))
                       }
                     />
-                    <span>Create this expense for the next months automatically</span>
+                    <span>Fixed</span>
                   </label>
 
                   <label className="checkbox-row">
@@ -1016,7 +1016,7 @@ function App() {
                         }))
                       }
                     />
-                    <span>Split this expense into installments</span>
+                    <span>Instalments</span>
                   </label>
 
                   {formState.isInstallment ? (
