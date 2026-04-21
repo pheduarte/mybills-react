@@ -1,0 +1,28 @@
+import { MONTH_STORAGE_KEY, SEED_TRANSACTIONS, STORAGE_KEY } from '../constants/appConstants'
+import { getMonthKey } from './date'
+
+// This helper reads transactions from localStorage and falls back to seed data.
+export function getInitialTransactions() {
+  const storedValue = localStorage.getItem(STORAGE_KEY)
+
+  if (!storedValue) {
+    return SEED_TRANSACTIONS
+  }
+
+  try {
+    return JSON.parse(storedValue)
+  } catch {
+    return SEED_TRANSACTIONS
+  }
+}
+
+// This helper remembers the month the user was viewing last time.
+export function getInitialMonth() {
+  const storedValue = localStorage.getItem(MONTH_STORAGE_KEY)
+
+  if (storedValue) {
+    return storedValue
+  }
+
+  return getMonthKey(new Date().toISOString())
+}

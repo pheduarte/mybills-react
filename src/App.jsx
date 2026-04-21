@@ -1,638 +1,28 @@
 import { useEffect, useState } from 'react'
-import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth'
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
-import { auth, db, isFirebaseConfigured, missingFirebaseEnvKeys } from './firebase'
 import './App.css'
-
-// This local key helps migrate your existing device-only data into Firestore the first time.
-const STORAGE_KEY = 'mybills-transactions-v1'
-const MONTH_STORAGE_KEY = 'mybills-selected-month-v1'
-const RECURRING_MONTH_COUNT = 24
-
-// These category suggestions mirror the way you already group your bills.
-const CATEGORY_SUGGESTIONS = [
-  'House',
-  'Subscription',
-  'Installments',
-  'Transport',
-  'Food',
-  'Health',
-  'Entertainment',
-  'Income',
-]
-
-// These colors give each category card its own visual identity.
-const CATEGORY_COLORS = {
-  House: '#74d66c',
-  Subscription: '#ff8ad8',
-  Installments: '#ffbe64',
-  Transport: '#81d5ff',
-  Food: '#ff8b7b',
-  Health: '#8f95ff',
-  Entertainment: '#c78dff',
-  Income: '#6fcf97',
-}
-
-// This sample data makes the dashboard feel alive on first load.
-const SEED_TRANSACTIONS = [
-  {
-    id: 'txn-1',
-    title: 'Salary 1',
-    type: 'income',
-    amount: 1200,
-    date: '2026-04-14',
-    category: 'Income',
-    notes: 'First pay cycle',
-  },
-  {
-    id: 'txn-2',
-    title: 'Salary 2',
-    type: 'income',
-    amount: 1200,
-    date: '2026-04-28',
-    category: 'Income',
-    notes: 'Second pay cycle',
-  },
-  {
-    id: 'txn-3',
-    title: 'Rent',
-    type: 'expense',
-    amount: 620,
-    date: '2026-04-09',
-    category: 'House',
-    notes: 'Main rent payment',
-  },
-  {
-    id: 'txn-4',
-    title: 'Electricity',
-    type: 'expense',
-    amount: 163.65,
-    date: '2026-04-08',
-    category: 'House',
-    notes: 'Monthly utility bill',
-  },
-  {
-    id: 'txn-5',
-    title: 'Electricity',
-    type: 'expense',
-    amount: 175.09,
-    date: '2026-04-27',
-    category: 'House',
-    notes: 'Catch-up payment',
-  },
-  {
-    id: 'txn-6',
-    title: 'Gas',
-    type: 'expense',
-    amount: 24.65,
-    date: '2026-04-24',
-    category: 'House',
-    notes: 'Cooking gas top-up',
-  },
-  {
-    id: 'txn-7',
-    title: 'Internet',
-    type: 'expense',
-    amount: 89,
-    date: '2026-04-18',
-    category: 'House',
-    notes: 'Home broadband',
-  },
-  {
-    id: 'txn-8',
-    title: 'Disney+',
-    type: 'expense',
-    amount: 15.99,
-    date: '2026-04-05',
-    category: 'Subscription',
-    notes: 'Streaming',
-  },
-  {
-    id: 'txn-9',
-    title: 'Amazon',
-    type: 'expense',
-    amount: 9.99,
-    date: '2026-04-01',
-    category: 'Subscription',
-    notes: 'Prime',
-  },
-  {
-    id: 'txn-10',
-    title: 'YouTube',
-    type: 'expense',
-    amount: 39.99,
-    date: '2026-04-06',
-    category: 'Subscription',
-    notes: 'Family plan',
-  },
-  {
-    id: 'txn-11',
-    title: 'ChatGPT',
-    type: 'expense',
-    amount: 31.9,
-    date: '2026-04-08',
-    category: 'Subscription',
-    notes: 'Work tools',
-  },
-  {
-    id: 'txn-12',
-    title: 'iCloud',
-    type: 'expense',
-    amount: 14.99,
-    date: '2026-04-16',
-    category: 'Subscription',
-    notes: 'Storage',
-  },
-  {
-    id: 'txn-13',
-    title: 'iPhone',
-    type: 'expense',
-    amount: 15.99,
-    date: '2026-04-29',
-    category: 'Subscription',
-    notes: 'Device storage upgrade',
-  },
-  {
-    id: 'txn-14',
-    title: 'Gym',
-    type: 'expense',
-    amount: 31.99,
-    date: '2026-04-01',
-    category: 'Installments',
-    notes: 'Installment 1 of 4',
-  },
-  {
-    id: 'txn-15',
-    title: 'AP Chemist',
-    type: 'expense',
-    amount: 33.75,
-    date: '2026-04-03',
-    category: 'Installments',
-    notes: 'Installment 1 of 4',
-  },
-  {
-    id: 'txn-16',
-    title: 'AP Amazon',
-    type: 'expense',
-    amount: 24.75,
-    date: '2026-04-03',
-    category: 'Installments',
-    notes: 'Installment 1 of 4',
-  },
-  {
-    id: 'txn-17',
-    title: 'Salary 1',
-    type: 'income',
-    amount: 1260,
-    date: '2026-05-14',
-    category: 'Income',
-    notes: 'Pay rise example',
-  },
-  {
-    id: 'txn-18',
-    title: 'Salary 2',
-    type: 'income',
-    amount: 1260,
-    date: '2026-05-28',
-    category: 'Income',
-    notes: 'Pay rise example',
-  },
-  {
-    id: 'txn-19',
-    title: 'Rent',
-    type: 'expense',
-    amount: 620,
-    date: '2026-05-09',
-    category: 'House',
-    notes: 'Main rent payment',
-  },
-  {
-    id: 'txn-20',
-    title: 'Internet',
-    type: 'expense',
-    amount: 89,
-    date: '2026-05-18',
-    category: 'House',
-    notes: 'Home broadband',
-  },
-  {
-    id: 'txn-21',
-    title: 'ChatGPT',
-    type: 'expense',
-    amount: 31.9,
-    date: '2026-05-08',
-    category: 'Subscription',
-    notes: 'Work tools',
-  },
-]
-
-// This helper keeps all dates stored in the same yyyy-mm format.
-function getMonthKey(dateString) {
-  return dateString.slice(0, 7)
-}
-
-// This helper converts a month key back into a real JavaScript Date.
-function getMonthDate(monthKey) {
-  const [year, month] = monthKey.split('-').map(Number)
-  return new Date(year, month - 1, 1)
-}
-
-// This helper moves the dashboard forward or backward one month.
-function shiftMonth(monthKey, step) {
-  const nextDate = getMonthDate(monthKey)
-  nextDate.setMonth(nextDate.getMonth() + step)
-
-  return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`
-}
-
-// This helper creates a valid date string inside the selected month.
-function getDefaultDateForMonth(monthKey) {
-  return `${monthKey}-01`
-}
-
-// This helper creates a fresh form state for either add mode or edit mode.
-function createEmptyForm(monthKey) {
-  return {
-    title: '',
-    type: 'expense',
-    amount: '',
-    date: getDefaultDateForMonth(monthKey),
-    category: 'House',
-    notes: '',
-    isRecurring: false,
-    isInstallment: false,
-    installmentCount: '3',
-    installmentFrequency: 'monthly',
-  }
-}
-
-// This helper shifts a date by a fixed number of days for weekly-based schedules.
-function addDaysToDate(dateString, daysToAdd) {
-  const nextDate = new Date(`${dateString}T00:00:00`)
-  nextDate.setDate(nextDate.getDate() + daysToAdd)
-
-  return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}-${String(
-    nextDate.getDate(),
-  ).padStart(2, '0')}`
-}
-
-// This helper adds months while keeping the original day when possible.
-function addMonthsToDate(dateString, monthsToAdd) {
-  const [year, month, day] = dateString.split('-').map(Number)
-  const nextMonthDate = new Date(year, month - 1 + monthsToAdd, 1)
-  const lastDayOfNextMonth = new Date(nextMonthDate.getFullYear(), nextMonthDate.getMonth() + 1, 0).getDate()
-  const safeDay = Math.min(day, lastDayOfNextMonth)
-
-  return `${nextMonthDate.getFullYear()}-${String(nextMonthDate.getMonth() + 1).padStart(2, '0')}-${String(
-    safeDay,
-  ).padStart(2, '0')}`
-}
-
-// This helper expands one recurring expense into monthly entries for the next two years.
-function createRecurringTransactions(baseTransaction) {
-  const seriesId = crypto.randomUUID()
-
-  return Array.from({ length: RECURRING_MONTH_COUNT }, (_, index) => ({
-    ...baseTransaction,
-    id: crypto.randomUUID(),
-    date: addMonthsToDate(baseTransaction.date, index),
-    seriesId,
-    recurrenceIndex: index,
-  }))
-}
-
-// This helper expands one installment purchase into a fixed payment plan.
-function createInstallmentTransactions(baseTransaction, installmentCount, installmentFrequency) {
-  const totalInstallments = Number(installmentCount)
-
-  return Array.from({ length: totalInstallments }, (_, index) => {
-    const nextDate =
-      installmentFrequency === 'monthly'
-        ? addMonthsToDate(baseTransaction.date, index)
-        : addDaysToDate(baseTransaction.date, installmentFrequency === 'weekly' ? index * 7 : index * 14)
-
-    return {
-      ...baseTransaction,
-      id: crypto.randomUUID(),
-      date: nextDate,
-      notes: baseTransaction.notes
-        ? `${baseTransaction.notes} • Installment ${index + 1} of ${totalInstallments}`
-        : `Installment ${index + 1} of ${totalInstallments}`,
-    }
-  })
-}
-
-// This helper sorts transactions by date, then by title, to keep rendering stable.
-function sortTransactions(items) {
-  return [...items].sort((left, right) => {
-    if (left.date === right.date) {
-      return left.title.localeCompare(right.title)
-    }
-
-    return left.date.localeCompare(right.date)
-  })
-}
-
-// This helper adds the numbers in a transaction list.
-function sumAmounts(items) {
-  return items.reduce((total, item) => total + item.amount, 0)
-}
-
-// This helper formats every dollar amount consistently.
-function formatCurrency(value, shouldHide = false) {
-  if (shouldHide) {
-    return '••••'
-  }
-
-  return new Intl.NumberFormat('en-AU', {
-    style: 'currency',
-    currency: 'AUD',
-  }).format(value)
-}
-
-// This helper prints the selected month in a friendly heading format.
-function formatMonthLabel(monthKey) {
-  return new Intl.DateTimeFormat('en-AU', {
-    month: 'long',
-    year: 'numeric',
-  }).format(getMonthDate(monthKey))
-}
-
-// This helper prints short dates inside cards and lists.
-function formatShortDate(dateString) {
-  return new Intl.DateTimeFormat('en-AU', {
-    day: 'numeric',
-    month: 'short',
-  }).format(new Date(`${dateString}T00:00:00`))
-}
-
-// This helper makes negative balances look intentional in the UI.
-function getBalanceLabel(balance) {
-  if (balance > 0) {
-    return 'You are ahead this month'
-  }
-
-  if (balance < 0) {
-    return 'You are overspending this month'
-  }
-
-  return 'You are exactly on budget'
-}
-
-// This helper gives every category card a nice accent color.
-function getCategoryColor(category) {
-  return CATEGORY_COLORS[category] ?? '#a8afc7'
-}
-
-// This helper groups the selected month into separate category cards.
-function groupTransactionsByCategory(items) {
-  const grouped = items.reduce((groups, item) => {
-    if (!groups[item.category]) {
-      groups[item.category] = []
-    }
-
-    groups[item.category].push(item)
-    return groups
-  }, {})
-
-  return Object.entries(grouped)
-    .map(([category, transactions]) => ({
-      category,
-      transactions: sortTransactions(transactions),
-      total: sumAmounts(transactions),
-      type: transactions.every((item) => item.type === 'income') ? 'income' : 'expense',
-    }))
-    .sort((left, right) => {
-      const leftIndex = CATEGORY_SUGGESTIONS.indexOf(left.category)
-      const rightIndex = CATEGORY_SUGGESTIONS.indexOf(right.category)
-
-      if (leftIndex === -1 && rightIndex === -1) {
-        return left.category.localeCompare(right.category)
-      }
-
-      if (leftIndex === -1) {
-        return 1
-      }
-
-      if (rightIndex === -1) {
-        return -1
-      }
-
-      return leftIndex - rightIndex
-    })
-}
-
-// This helper reads transactions from localStorage and falls back to seed data.
-function getInitialTransactions() {
-  const storedValue = localStorage.getItem(STORAGE_KEY)
-
-  if (!storedValue) {
-    return SEED_TRANSACTIONS
-  }
-
-  try {
-    return JSON.parse(storedValue)
-  } catch {
-    return SEED_TRANSACTIONS
-  }
-}
-
-// This helper remembers the month the user was viewing last time.
-function getInitialMonth() {
-  const storedValue = localStorage.getItem(MONTH_STORAGE_KEY)
-
-  if (storedValue) {
-    return storedValue
-  }
-
-  return getMonthKey(new Date().toISOString())
-}
-
-// This helper points every signed-in user to their own private Firestore document.
-function getUserDataDoc(userId) {
-  return doc(db, 'users', userId, 'private', 'myBills')
-}
-
-// This small presentational component keeps our stat cards consistent.
-function SummaryStat({ label, value, tone, hideAmounts }) {
-  return (
-    <div className="summary-stat">
-      <span className={`summary-icon ${tone}`}>{tone === 'income' ? '+' : tone === 'expense' ? '-' : '='}</span>
-      <div>
-        <p className="summary-label">{label}</p>
-        <strong>{formatCurrency(value, hideAmounts)}</strong>
-      </div>
-    </div>
-  )
-}
-
-// This screen appears until Firebase is configured with real project credentials.
-function FirebaseSetupPanel() {
-  return (
-    <main className="app-shell app-shell--centered">
-      <section className="panel auth-panel">
-        <p className="eyebrow">Firebase setup</p>
-        <h3>Connect MyBills to Firebase</h3>
-        <p className="auth-copy">
-          Add your Firebase web app credentials to a local <code>.env</code> file and to Vercel environment
-          variables before signing in.
-        </p>
-
-        <div className="setup-block">
-          <strong>Missing variables</strong>
-          <ul className="setup-list">
-            {missingFirebaseEnvKeys.map((key) => (
-              <li key={key}>{key}</li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="setup-block">
-          <strong>Firebase console checklist</strong>
-          <p>Enable Email/Password sign-in in Authentication and create a Firestore database in production mode.</p>
-        </div>
-      </section>
-    </main>
-  )
-}
-
-// This screen is reused while checking auth or loading the user’s cloud data.
-function LoadingPanel({ eyebrow, title, message }) {
-  return (
-    <main className="app-shell app-shell--centered">
-      <section className="panel auth-panel auth-panel--compact">
-        <p className="eyebrow">{eyebrow}</p>
-        <h3>{title}</h3>
-        <p className="auth-copy">{message}</p>
-      </section>
-    </main>
-  )
-}
-
-// This auth panel keeps sign in and account creation in a single small flow.
-function AuthPanel({
-  authMode,
-  authForm,
-  authError,
-  isAuthSubmitting,
-  onAuthFormChange,
-  onAuthSubmit,
-  onModeChange,
-}) {
-  return (
-    <main className="app-shell app-shell--centered">
-      <section className="panel auth-panel">
-        <div>
-          <p className="eyebrow">Cloud sync</p>
-          <h3>{authMode === 'signin' ? 'Sign in to MyBills' : 'Create your MyBills account'}</h3>
-        </div>
-
-        <p className="auth-copy">
-          Sign in to keep your bills, recurring expenses, and installments synced across all your devices.
-        </p>
-
-        <form className="transaction-form" onSubmit={onAuthSubmit}>
-          <label>
-            Email
-            <input
-              autoComplete="email"
-              name="email"
-              type="email"
-              placeholder="you@example.com"
-              value={authForm.email}
-              onChange={onAuthFormChange}
-            />
-          </label>
-
-          <label>
-            Password
-            <input
-              autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
-              name="password"
-              type="password"
-              placeholder="At least 6 characters"
-              value={authForm.password}
-              onChange={onAuthFormChange}
-            />
-          </label>
-
-          {authError ? <p className="auth-error">{authError}</p> : null}
-
-          <button className="primary-button" disabled={isAuthSubmitting} type="submit">
-            {isAuthSubmitting
-              ? 'Please wait...'
-              : authMode === 'signin'
-                ? 'Sign in'
-                : 'Create account'}
-          </button>
-        </form>
-
-        <button className="auth-switch" type="button" onClick={() => onModeChange(authMode === 'signin' ? 'signup' : 'signin')}>
-          {authMode === 'signin' ? 'Need an account? Create one' : 'Already have an account? Sign in'}
-        </button>
-      </section>
-    </main>
-  )
-}
-
-// This component renders one category card at a time.
-function CategoryCard({ group, hideAmounts, onDeleteTransaction, onEditTransaction }) {
-  return (
-    <article
-      className={`category-card ${group.type}`}
-      style={{ '--category-accent': getCategoryColor(group.category) }}
-    >
-      <header className="category-card__header">
-        <div>
-          <p className="eyebrow">{group.type === 'income' ? 'Income stream' : 'Expense category'}</p>
-          <h3>{group.category}</h3>
-        </div>
-        <strong className={group.type === 'income' ? 'amount-positive' : 'amount-negative'}>
-          {group.type === 'income' ? '+' : '-'}
-          {formatCurrency(group.total, hideAmounts)}
-        </strong>
-      </header>
-
-      <div className="category-card__list">
-        {group.transactions.map((transaction) => (
-          <div className="transaction-row" key={transaction.id}>
-            <button
-              className="transaction-row__content"
-              type="button"
-              onClick={() => onEditTransaction(transaction)}
-            >
-              <strong>{transaction.title}</strong>
-              <p>
-                {formatShortDate(transaction.date)}
-                {transaction.notes ? ` • ${transaction.notes}` : ''}
-                {transaction.seriesId ? ' • Recurring' : ''}
-              </p>
-            </button>
-
-            <div className="transaction-row__meta">
-              <span className={transaction.type === 'income' ? 'amount-positive' : 'amount-negative'}>
-                {transaction.type === 'income' ? '+' : '-'}
-                {formatCurrency(transaction.amount, hideAmounts)}
-              </span>
-              <button
-                className="ghost-button"
-                type="button"
-                onClick={() => onDeleteTransaction(transaction)}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </article>
-  )
-}
+import AuthPanel from './components/auth/AuthPanel'
+import FirebaseSetupPanel from './components/auth/FirebaseSetupPanel'
+import LoadingPanel from './components/auth/LoadingPanel'
+import CategoriesSection from './components/categories/CategoriesSection'
+import TransactionComposer from './components/composer/TransactionComposer'
+import HeroCard from './components/dashboard/HeroCard'
+import UpcomingPaymentsSection from './components/dashboard/UpcomingPaymentsSection'
+import { CATEGORY_SUGGESTIONS, MONTH_STORAGE_KEY } from './constants/appConstants'
+import { useAuthSession } from './hooks/useAuthSession'
+import { useTransactionsSync } from './hooks/useTransactionsSync'
+import { isFirebaseConfigured } from './firebase'
+import { getDefaultDateForMonth, getMonthKey, shiftMonth } from './utils/date'
+import { groupTransactionsByCategory } from './utils/transactions'
+import {
+  createEmptyForm,
+  createInstallmentTransactions,
+  createRecurringTransactions,
+  sortTransactions,
+  sumAmounts,
+} from './utils/transactions'
+import { getInitialMonth } from './utils/storage'
 
 function App() {
-  // This state stores every income and expense in the app.
-  const [transactions, setTransactions] = useState([])
-
   // This state tracks which month the dashboard should show.
   const [selectedMonth, setSelectedMonth] = useState(getInitialMonth)
 
@@ -645,135 +35,31 @@ function App() {
   // This state tracks whether the bottom composer is editing an existing transaction.
   const [editingTransactionId, setEditingTransactionId] = useState(null)
 
-  // These auth states control the Firebase session flow.
-  const [user, setUser] = useState(null)
-  const [authMode, setAuthMode] = useState('signin')
-  const [authForm, setAuthForm] = useState({ email: '', password: '' })
-  const [authError, setAuthError] = useState('')
-  const [isAuthLoading, setIsAuthLoading] = useState(isFirebaseConfigured)
-  const [isAuthSubmitting, setIsAuthSubmitting] = useState(false)
-
-  // These sync states keep Firestore loading and error handling explicit.
-  const [isDataLoading, setIsDataLoading] = useState(false)
-  const [hasLoadedRemoteData, setHasLoadedRemoteData] = useState(false)
-  const [syncError, setSyncError] = useState('')
-
   // This state controls the add-transaction form inputs.
   const [formState, setFormState] = useState(() => createEmptyForm(getInitialMonth()))
 
-  // This effect listens for Firebase auth changes once on app start.
-  useEffect(() => {
-    if (!auth) {
-      return undefined
-    }
+  // This hook owns the Firebase Authentication flow and session state.
+  function handleSignedOutState() {
+    setEditingTransactionId(null)
+    setFormState(createEmptyForm(getInitialMonth()))
+    setIsEntryOpen(false)
+  }
 
-    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
-      setUser(nextUser)
-      setIsAuthLoading(false)
-      setAuthError('')
+  const {
+    authError,
+    authForm,
+    authMode,
+    handleAuthFormChange,
+    handleAuthSubmit,
+    handleSignOut,
+    isAuthLoading,
+    isAuthSubmitting,
+    setAuthMode,
+    user,
+  } = useAuthSession({ onSignedOut: handleSignedOutState })
 
-      if (!nextUser) {
-        setTransactions([])
-        setHasLoadedRemoteData(false)
-        setEditingTransactionId(null)
-        setFormState(createEmptyForm(getInitialMonth()))
-        setIsEntryOpen(false)
-      }
-    })
-
-    return unsubscribe
-  }, [])
-
-  // This effect loads the signed-in user’s data from Firestore.
-  useEffect(() => {
-    let isCancelled = false
-
-    async function loadUserData() {
-      if (!user || !db) {
-        setIsDataLoading(false)
-        setHasLoadedRemoteData(false)
-        return
-      }
-
-      setIsDataLoading(true)
-      setHasLoadedRemoteData(false)
-      setSyncError('')
-
-      try {
-        const userDataRef = getUserDataDoc(user.uid)
-        const snapshot = await getDoc(userDataRef)
-        const fallbackTransactions = getInitialTransactions()
-        const nextTransactions =
-          snapshot.exists() && Array.isArray(snapshot.data().transactions)
-            ? snapshot.data().transactions
-            : fallbackTransactions
-
-        if (!snapshot.exists()) {
-          await setDoc(
-            userDataRef,
-            {
-              transactions: nextTransactions,
-              email: user.email ?? '',
-              updatedAt: serverTimestamp(),
-            },
-            { merge: true },
-          )
-
-          // Once we migrate local data into Firestore, we no longer need the device-only copy.
-          localStorage.removeItem(STORAGE_KEY)
-        }
-
-        if (!isCancelled) {
-          setTransactions(nextTransactions)
-          setHasLoadedRemoteData(true)
-        }
-      } catch {
-        if (!isCancelled) {
-          setTransactions(getInitialTransactions())
-          setHasLoadedRemoteData(true)
-          setSyncError('We could not load your cloud data right now. Please try again.')
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsDataLoading(false)
-        }
-      }
-    }
-
-    loadUserData()
-
-    return () => {
-      isCancelled = true
-    }
-  }, [user])
-
-  // This effect keeps Firestore updated after the initial user data has loaded.
-  useEffect(() => {
-    if (!user || !db || !hasLoadedRemoteData) {
-      return undefined
-    }
-
-    const syncTimeout = window.setTimeout(async () => {
-      try {
-        await setDoc(
-          getUserDataDoc(user.uid),
-          {
-            transactions,
-            email: user.email ?? '',
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true },
-        )
-        setSyncError('')
-      } catch {
-        setSyncError('Your latest changes could not be synced right now.')
-      }
-    }, 300)
-
-    return () => {
-      window.clearTimeout(syncTimeout)
-    }
-  }, [transactions, user, hasLoadedRemoteData])
+  // This hook loads and syncs transactions to Firestore.
+  const { hasLoadedRemoteData, isDataLoading, setTransactions, syncError, transactions } = useTransactionsSync(user)
 
   // This effect remembers the month the user viewed last.
   useEffect(() => {
@@ -809,6 +95,9 @@ function App() {
   // This list powers the "Upcoming payments" section for the selected month.
   const upcomingTransactions = expenseTransactions.slice(0, 5)
 
+  // This derived item gives the composer access to the transaction currently being edited.
+  const editingTransaction = transactions.find((transaction) => transaction.id === editingTransactionId) ?? null
+
   // This helper restores the composer to its default add-entry state.
   function resetComposer(monthKey = selectedMonth) {
     setEditingTransactionId(null)
@@ -816,42 +105,18 @@ function App() {
     setIsEntryOpen(false)
   }
 
-  // This handler updates the small Firebase auth form.
-  function handleAuthFormChange(event) {
-    const { name, value } = event.target
-
-    setAuthForm((currentForm) => ({
-      ...currentForm,
-      [name]: value,
-    }))
-  }
-
-  // This handler signs in or creates an account with Firebase email/password auth.
-  async function handleAuthSubmit(event) {
-    event.preventDefault()
-    setAuthError('')
-    setIsAuthSubmitting(true)
-
-    try {
-      if (authMode === 'signin') {
-        await signInWithEmailAndPassword(auth, authForm.email.trim(), authForm.password)
-      } else {
-        await createUserWithEmailAndPassword(auth, authForm.email.trim(), authForm.password)
-      }
-    } catch (error) {
-      setAuthError(error.message ?? 'Authentication failed. Please check your email and password.')
-    } finally {
-      setIsAuthSubmitting(false)
-    }
-  }
-
-  // This handler closes the Firebase session and returns to the auth screen.
-  async function handleSignOut() {
-    if (!auth) {
-      return
-    }
-
-    await signOut(auth)
+  // This handler confirms or reopens a payment directly from the upcoming list.
+  function handleTogglePaid(transactionId) {
+    setTransactions((currentTransactions) =>
+      currentTransactions.map((transaction) =>
+        transaction.id === transactionId
+          ? {
+              ...transaction,
+              isPaid: !transaction.isPaid,
+            }
+          : transaction,
+      ),
+    )
   }
 
   // This handler updates form fields as the user types.
@@ -900,6 +165,7 @@ function App() {
       date: formState.date,
       category: formState.category.trim(),
       notes: formState.notes.trim(),
+      isPaid: false,
     }
 
     const targetMonth = getMonthKey(formState.date)
@@ -935,10 +201,24 @@ function App() {
     } else if (formState.type === 'expense' && formState.isRecurring) {
       setTransactions((currentTransactions) => [
         ...currentTransactions,
-        ...createRecurringTransactions({
-          ...nextTransaction,
-          type: 'expense',
-        }),
+        ...createRecurringTransactions(
+          {
+            ...nextTransaction,
+            type: 'expense',
+          },
+          formState.recurringFrequency,
+        ),
+      ])
+    } else if (formState.type === 'income' && formState.isRecurring) {
+      setTransactions((currentTransactions) => [
+        ...currentTransactions,
+        ...createRecurringTransactions(
+          {
+            ...nextTransaction,
+            type: 'income',
+          },
+          formState.recurringFrequency,
+        ),
       ])
     } else {
       setTransactions((currentTransactions) => [...currentTransactions, nextTransaction])
@@ -960,6 +240,10 @@ function App() {
       category: transaction.category,
       notes: transaction.notes ?? '',
       isRecurring: Boolean(transaction.seriesId),
+      recurringFrequency: 'monthly',
+      isInstallment: false,
+      installmentCount: '3',
+      installmentFrequency: 'monthly',
     })
     setIsEntryOpen(true)
   }
@@ -1086,11 +370,7 @@ function App() {
           <button className="ghost-button ghost-button--session" type="button" onClick={handleSignOut}>
             Sign out
           </button>
-          <button
-            className="icon-button"
-            type="button"
-            onClick={() => setHideAmounts((currentValue) => !currentValue)}
-          >
+          <button className="icon-button" type="button" onClick={() => setHideAmounts((currentValue) => !currentValue)}>
             {hideAmounts ? 'Show' : 'Hide'}
           </button>
         </div>
@@ -1098,290 +378,43 @@ function App() {
 
       {syncError ? <p className="sync-banner">{syncError}</p> : null}
 
-      {/* This hero card summarizes the selected month at a glance. */}
-      <section className="hero-card">
-        <div className="hero-card__header">
-          <div className="hero-card__month">
-            <p className="eyebrow">Cashboard</p>
-            <h2>{formatMonthLabel(selectedMonth)}</h2>
-          </div>
-        </div>
+      <HeroCard
+        balance={balance}
+        hideAmounts={hideAmounts}
+        incomeShare={incomeShare}
+        selectedMonth={selectedMonth}
+        totalExpenses={totalExpenses}
+        totalIncome={totalIncome}
+        onMonthChange={handleMonthChange}
+      />
 
-        <div className="hero-card__nav">
-          <button
-            className="icon-button icon-button--soft"
-            type="button"
-            onClick={() => handleMonthChange(-1)}
-          >
-            Prev
-          </button>
+      <UpcomingPaymentsSection
+        hideAmounts={hideAmounts}
+        upcomingTransactions={upcomingTransactions}
+        onEditTransaction={handleEditTransaction}
+        onTogglePaid={handleTogglePaid}
+      />
 
-          <button
-            className="icon-button icon-button--soft"
-            type="button"
-            onClick={() => handleMonthChange(1)}
-          >
-            Next
-          </button>
-        </div>
+      <CategoriesSection
+        categoryGroups={categoryGroups}
+        hideAmounts={hideAmounts}
+        selectedMonth={selectedMonth}
+        onEditTransaction={handleEditTransaction}
+      />
 
-        <div className="progress-card">
-          <div className="progress-bar" aria-hidden="true">
-            <span className="progress-bar__income" style={{ width: `${incomeShare}%` }} />
-            <span className="progress-bar__expense" style={{ width: `${100 - incomeShare}%` }} />
-          </div>
-
-          <div className="summary-grid">
-            <SummaryStat label="Income" value={totalIncome} tone="income" hideAmounts={hideAmounts} />
-            <SummaryStat label="Expenses" value={totalExpenses} tone="expense" hideAmounts={hideAmounts} />
-          </div>
-
-          <div className={`balance-row ${balance >= 0 ? 'positive' : 'negative'}`}>
-            <p>{getBalanceLabel(balance)}</p>
-            <strong>{formatCurrency(balance, hideAmounts)}</strong>
-          </div>
-        </div>
-      </section>
-
-      {/* This section surfaces the next expenses in the selected month. */}
-      <section className="panel">
-        <div className="panel__title">
-          <div>
-            <p className="eyebrow">Month timeline</p>
-            <h3>Upcoming payments</h3>
-          </div>
-          <span className="chip">{upcomingTransactions.length} items</span>
-        </div>
-
-        {upcomingTransactions.length > 0 ? (
-          <div className="upcoming-list">
-            {upcomingTransactions.map((transaction) => (
-              <div className="upcoming-row" key={transaction.id}>
-                <button
-                  className="transaction-row__content"
-                  type="button"
-                  onClick={() => handleEditTransaction(transaction)}
-                >
-                  <strong>{transaction.title}</strong>
-                  <p>
-                    {transaction.category}
-                    {transaction.notes ? ` • ${transaction.notes}` : ''}
-                    {transaction.seriesId ? ' • Recurring' : ''}
-                  </p>
-                </button>
-                <div className="upcoming-row__meta">
-                  <span>{formatShortDate(transaction.date)}</span>
-                  <strong className="amount-negative">-{formatCurrency(transaction.amount, hideAmounts)}</strong>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="empty-state">
-            <strong>No expenses in this month yet</strong>
-            <p>Add a bill above and it will appear here automatically.</p>
-          </div>
-        )}
-      </section>
-
-      {/* This final section renders each category as its own modern card. */}
-      <section className="categories-section">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Monthly breakdown</p>
-            <h3>Category cards</h3>
-          </div>
-          <span className="chip">{categoryGroups.length} groups</span>
-        </div>
-
-        {categoryGroups.length > 0 ? (
-          <div className="categories-grid">
-            {categoryGroups.map((group) => (
-              <CategoryCard
-                group={group}
-                hideAmounts={hideAmounts}
-                key={group.category}
-                onDeleteTransaction={handleDeleteTransaction}
-                onEditTransaction={handleEditTransaction}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="panel empty-state">
-            <strong>This month is empty</strong>
-            <p>Use the form to add your first income or expense for {formatMonthLabel(selectedMonth)}.</p>
-          </div>
-        )}
-      </section>
-
-      {/* This bottom composer stays visible and expands into the full form when tapped. */}
-      <section className={`panel composer ${isEntryOpen ? 'composer--open' : 'composer--closed'}`}>
-        {!isEntryOpen ? (
-          <button className="composer-trigger" type="button" onClick={() => setIsEntryOpen(true)}>
-            <span className="composer-trigger__label">Add new entry</span>
-            <span className="composer-trigger__placeholder">Tap to add income or expense...</span>
-          </button>
-        ) : (
-          <>
-            <div className="panel__title">
-              <div>
-                <p className="eyebrow">{editingTransactionId ? 'Edit entry' : 'Add new entry'}</p>
-                <h3>{editingTransactionId ? 'Update transaction' : 'Income and expenses'}</h3>
-              </div>
-
-              <div className="composer-actions">
-                <span className="chip chip--cloud">Cloud sync</span>
-                <button className="ghost-button" type="button" onClick={() => resetComposer()}>
-                  X
-                </button>
-              </div>
-            </div>
-
-            <form className="transaction-form" onSubmit={handleSaveTransaction}>
-              <label>
-                Title
-                <input
-                  name="title"
-                  type="text"
-                  placeholder="Rent, Salary, Internet..."
-                  value={formState.title}
-                  onChange={handleInputChange}
-                />
-              </label>
-
-              <div className="form-row">
-                <label>
-                  Type
-                  <select name="type" value={formState.type} onChange={handleInputChange}>
-                    <option value="expense">Expense</option>
-                    <option value="income">Income</option>
-                  </select>
-                </label>
-
-                <label>
-                  Amount
-                  <input
-                    name="amount"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formState.amount}
-                    onChange={handleInputChange}
-                  />
-                </label>
-              </div>
-
-              <div className="form-row">
-                <label>
-                  Date
-                  <input name="date" type="date" value={formState.date} onChange={handleInputChange} />
-                </label>
-
-                <label>
-                  Category
-                  <input
-                    list="category-suggestions"
-                    name="category"
-                    type="text"
-                    placeholder="House"
-                    value={formState.category}
-                    onChange={handleInputChange}
-                  />
-                  <datalist id="category-suggestions">
-                    {categoryOptions.map((category) => (
-                      <option key={category} value={category} />
-                    ))}
-                  </datalist>
-                </label>
-              </div>
-
-              <label>
-                Notes
-                <input
-                  name="notes"
-                  type="text"
-                  placeholder="Installment 2 of 5, Streaming, Pay cycle..."
-                  value={formState.notes}
-                  onChange={handleInputChange}
-                />
-              </label>
-
-              {formState.type === 'expense' && !editingTransactionId ? (
-                <>
-                  <label className="checkbox-row">
-                    <input
-                      checked={formState.isRecurring}
-                      name="isRecurring"
-                      type="checkbox"
-                      onChange={(event) =>
-                        setFormState((currentForm) => ({
-                          ...currentForm,
-                          isRecurring: event.target.checked,
-                          isInstallment: event.target.checked ? false : currentForm.isInstallment,
-                        }))
-                      }
-                    />
-                    <span>Fixed</span>
-                  </label>
-
-                  <label className="checkbox-row">
-                    <input
-                      checked={formState.isInstallment}
-                      name="isInstallment"
-                      type="checkbox"
-                      onChange={(event) =>
-                        setFormState((currentForm) => ({
-                          ...currentForm,
-                          isInstallment: event.target.checked,
-                          isRecurring: event.target.checked ? false : currentForm.isRecurring,
-                        }))
-                      }
-                    />
-                    <span>Instalments</span>
-                  </label>
-
-                  {formState.isInstallment ? (
-                    <div className="form-row">
-                      <label>
-                        Payments
-                        <select
-                          name="installmentCount"
-                          value={formState.installmentCount}
-                          onChange={handleInputChange}
-                        >
-                          {Array.from({ length: 23 }, (_, index) => String(index + 2)).map((count) => (
-                            <option key={count} value={count}>
-                              {count} payments
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-
-                      <label>
-                        Frequency
-                        <select
-                          name="installmentFrequency"
-                          value={formState.installmentFrequency}
-                          onChange={handleInputChange}
-                        >
-                          <option value="weekly">Weekly</option>
-                          <option value="fortnightly">Fortnightly</option>
-                          <option value="monthly">Monthly</option>
-                        </select>
-                      </label>
-                    </div>
-                  ) : null}
-                </>
-              ) : null}
-
-              <button className="primary-button" type="submit">
-                {editingTransactionId ? 'Save changes' : 'Add transaction'}
-              </button>
-            </form>
-          </>
-        )}
-      </section>
+      <TransactionComposer
+        categoryOptions={categoryOptions}
+        editingTransaction={editingTransaction}
+        editingTransactionId={editingTransactionId}
+        formState={formState}
+        isEntryOpen={isEntryOpen}
+        setFormState={setFormState}
+        onClose={() => resetComposer()}
+        onDeleteTransaction={handleDeleteTransaction}
+        onInputChange={handleInputChange}
+        onOpen={() => setIsEntryOpen(true)}
+        onSaveTransaction={handleSaveTransaction}
+      />
     </main>
   )
 }

@@ -455,6 +455,27 @@
   text-align: right;
 }
 
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.status-chip.paid {
+  background: rgba(116, 214, 108, 0.18);
+  color: #2f6d33;
+}
+
+.status-chip.unpaid {
+  background: rgba(159, 170, 194, 0.18);
+  color: #5f6c86;
+}
+
 .transaction-row__content {
   flex: 1;
   min-width: 0;
@@ -485,6 +506,16 @@
   min-height: 20px;
   margin: 0;
   accent-color: #2f6d33;
+}
+
+.secondary-delete-button {
+  min-height: 46px;
+  border: 0;
+  border-radius: 18px;
+  background: rgba(180, 35, 24, 0.12);
+  color: #b42318;
+  font: inherit;
+  font-weight: 700;
 }
 
 /* This section holds the separate category cards. */
