@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="148" y1="98" x2="865" y2="942" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#172338" />
+      <stop offset=".52" stop-color="#10192B" />
+      <stop offset="1" stop-color="#0A1220" />
+    </linearGradient>
+    <radialGradient id="glowMint" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(871 201) rotate(131.434) scale(278.724)">
+      <stop stop-color="#8FE289" stop-opacity=".72" />
+      <stop offset="1" stop-color="#8FE289" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="glowBlue" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(175 847) rotate(-51.376) scale(318.881)">
+      <stop stop-color="#76CFFF" stop-opacity=".62" />
+      <stop offset="1" stop-color="#76CFFF" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="card" x1="216" y1="195" x2="786" y2="852" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7FBFF" stop-opacity=".96" />
+      <stop offset="1" stop-color="#E8EEF8" stop-opacity=".9" />
+    </linearGradient>
+    <linearGradient id="progress" x1="292" y1="0" x2="732" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#74D66C" />
+      <stop offset="1" stop-color="#6BCF8B" />
+    </linearGradient>
+    <linearGradient id="incomeOrb" x1="0" y1="0" x2="0" y2="146" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E6F8D9" />
+      <stop offset="1" stop-color="#BFE88A" />
+    </linearGradient>
+    <linearGradient id="expenseOrb" x1="0" y1="0" x2="0" y2="146" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D4DCED" />
+      <stop offset="1" stop-color="#B3BED9" />
+    </linearGradient>
+    <linearGradient id="footer" x1="250" y1="763" x2="775" y2="763" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#18223A" />
+      <stop offset="1" stop-color="#263247" />
+    </linearGradient>
+    <filter id="shadow" x="149" y="145" width="726" height="742" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feColorMatrix in="SourceAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
+      <feOffset dy="22" />
+      <feGaussianBlur stdDeviation="30" />
+      <feColorMatrix values="0 0 0 0 0.0156863 0 0 0 0 0.054902 0 0 0 0 0.12549 0 0 0 0.18 0" />
+      <feBlend in2="BackgroundImageFix" result="effect1_dropShadow" />
+      <feBlend in="SourceGraphic" in2="effect1_dropShadow" result="shape" />
+    </filter>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#bg)" />
+  <rect width="1024" height="1024" fill="url(#glowMint)" />
+  <rect width="1024" height="1024" fill="url(#glowBlue)" />
+
+  <g filter="url(#shadow)">
+    <rect x="209" y="183" width="606" height="622" rx="144" fill="url(#card)" />
+    <rect x="209.5" y="183.5" width="605" height="621" rx="143.5" stroke="white" stroke-opacity=".56" />
+  </g>
+
+  <rect x="286" y="252" width="114" height="16" rx="8" fill="#C1CCDE" />
+  <rect x="424" y="252" width="212" height="16" rx="8" fill="#D6DFED" />
+  <circle cx="708" cy="260" r="9" fill="#74D66C" />
+
+  <rect x="292" y="304" width="440" height="26" rx="13" fill="#CCD6E8" />
+  <rect x="292" y="304" width="285" height="26" rx="13" fill="url(#progress)" />
+
+  <rect x="274" y="364" width="476" height="158" rx="58" fill="white" fill-opacity=".9" />
+  <circle cx="368" cy="443" r="52" fill="url(#incomeOrb)" />
+  <path d="M365 412h6v25h24v6h-24v24h-6v-24h-24v-6h24z" fill="#356C30" />
+  <rect x="443" y="404" width="136" height="14" rx="7" fill="#8692AE" />
+  <rect x="443" y="432" width="192" height="28" rx="14" fill="#18233B" />
+  <rect x="443" y="474" width="120" height="12" rx="6" fill="#B4C0D8" />
+
+  <rect x="274" y="546" width="476" height="158" rx="58" fill="#F6F9FF" fill-opacity=".82" />
+  <circle cx="368" cy="625" r="52" fill="url(#expenseOrb)" />
+  <rect x="340" y="621" width="56" height="8" rx="4" fill="#5F6C86" />
+  <rect x="443" y="586" width="164" height="14" rx="7" fill="#8692AE" />
+  <rect x="443" y="614" width="176" height="28" rx="14" fill="#55627F" />
+  <rect x="443" y="656" width="148" height="12" rx="6" fill="#B4C0D8" />
+
+  <rect x="250" y="735" width="524" height="82" rx="41" fill="url(#footer)" />
+  <rect x="285" y="767" width="176" height="18" rx="9" fill="#B7C7E5" fill-opacity=".42" />
+  <rect x="517" y="757" width="219" height="38" rx="19" fill="#E6F8D9" />
+  <rect x="555" y="774" width="143" height="8" rx="4" fill="#2F6D33" />
+</svg>
