@@ -6,7 +6,6 @@ import LoadingPanel from './components/auth/LoadingPanel'
 import CategoriesSection from './components/categories/CategoriesSection'
 import TransactionComposer from './components/composer/TransactionComposer'
 import HeroCard from './components/dashboard/HeroCard'
-import UpcomingPaymentsSection from './components/dashboard/UpcomingPaymentsSection'
 import { CATEGORY_SUGGESTIONS, MONTH_STORAGE_KEY } from './constants/appConstants'
 import { useAuthSession } from './hooks/useAuthSession'
 import { useTransactionsSync } from './hooks/useTransactionsSync'
@@ -103,9 +102,6 @@ function App() {
   const cashFlowTotal = totalIncome + totalExpenses
   const incomeShare = cashFlowTotal === 0 ? 50 : (totalIncome / cashFlowTotal) * 100
 
-  // This list powers the "Upcoming payments" section for the selected month.
-  const upcomingTransactions = expenseTransactions.slice(0, 5)
-
   // This derived item gives the composer access to the transaction currently being edited.
   const editingTransaction = transactions.find((transaction) => transaction.id === editingTransactionId) ?? null
 
@@ -116,7 +112,7 @@ function App() {
     setIsEntryOpen(false)
   }
 
-  // This handler confirms or reopens a payment directly from the upcoming list.
+  // This handler confirms or reopens a payment directly from a category row.
   function handleTogglePaid(transactionId) {
     setTransactions((currentTransactions) =>
       currentTransactions.map((transaction) =>
@@ -410,18 +406,12 @@ function App() {
         onMonthChange={handleMonthChange}
       />
 
-      <UpcomingPaymentsSection
-        hideAmounts={hideAmounts}
-        upcomingTransactions={upcomingTransactions}
-        onEditTransaction={handleEditTransaction}
-        onTogglePaid={handleTogglePaid}
-      />
-
       <CategoriesSection
         categoryGroups={categoryGroups}
         hideAmounts={hideAmounts}
         selectedMonth={selectedMonth}
         onEditTransaction={handleEditTransaction}
+        onTogglePaid={handleTogglePaid}
       />
 
       <TransactionComposer
