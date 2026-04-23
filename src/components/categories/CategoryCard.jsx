@@ -3,7 +3,7 @@ import { formatCurrency, formatShortDate } from '../../utils/formatters'
 import { getCategoryColor } from '../../utils/transactions'
 
 // This component renders one category card at a time.
-function CategoryCard({ group, hideAmounts, onEditTransaction }) {
+function CategoryCard({ group, hideAmounts, onEditTransaction, onTogglePaid }) {
   const [isExpanded, setIsExpanded] = useState(true)
 
   return (
@@ -46,6 +46,19 @@ function CategoryCard({ group, hideAmounts, onEditTransaction }) {
               </button>
 
               <div className="transaction-row__meta">
+                {transaction.type === 'expense' ? (
+                  <>
+                    <button
+                      className={`ghost-button transaction-row__action ${
+                        transaction.isPaid ? 'transaction-row__action--paid' : ''
+                      }`}
+                      type="button"
+                      onClick={() => onTogglePaid(transaction.id)}
+                    >
+                      Pay
+                    </button>
+                  </>
+                ) : null}
                 <span className={transaction.type === 'income' ? 'amount-positive' : 'amount-negative'}>
                   {transaction.type === 'income' ? '+' : '-'}
                   {formatCurrency(transaction.amount, hideAmounts)}
