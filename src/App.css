@@ -26,7 +26,6 @@
 .panel__title,
 .section-heading,
 .transaction-row,
-.upcoming-row,
 .balance-row,
 .summary-grid,
 .form-row {
@@ -39,7 +38,6 @@
 .panel__title,
 .section-heading,
 .transaction-row,
-.upcoming-row,
 .balance-row {
   justify-content: space-between;
 }
@@ -429,14 +427,12 @@
   outline-offset: 2px;
 }
 
-/* This list styles the "upcoming payments" card. */
-.upcoming-list,
+/* This list styles the category card transactions. */
 .category-card__list {
   display: grid;
   gap: 12px;
 }
 
-.upcoming-row,
 .transaction-row {
   gap: 12px;
   align-items: flex-start;
@@ -444,27 +440,16 @@
   border-bottom: 1px solid var(--divider);
 }
 
-.upcoming-row:last-child,
 .transaction-row:last-child {
   padding-bottom: 0;
   border-bottom: 0;
 }
 
-.upcoming-row p,
 .transaction-row p {
   margin: 4px 0 0;
   color: var(--muted);
 }
 
-.upcoming-row__main {
-  flex: 1;
-  min-width: 0;
-  display: grid;
-  gap: 12px;
-  justify-items: start;
-}
-
-.upcoming-row__meta,
 .transaction-row__meta {
   display: grid;
   justify-items: end;
@@ -472,12 +457,12 @@
   text-align: right;
 }
 
-.upcoming-row__action {
+.transaction-row__action {
   min-height: 36px;
   padding: 0 16px;
 }
 
-.upcoming-row__action--paid {
+.transaction-row__action--paid {
   background: var(--status-paid-bg);
   color: var(--positive);
 }

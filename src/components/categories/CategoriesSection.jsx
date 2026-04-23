@@ -2,7 +2,7 @@ import CategoryCard from './CategoryCard'
 import { formatMonthLabel } from '../../utils/formatters'
 
 // This final section renders each category as its own modern card.
-function CategoriesSection({ categoryGroups, hideAmounts, selectedMonth, onEditTransaction }) {
+function CategoriesSection({ categoryGroups, hideAmounts, selectedMonth, onEditTransaction, onTogglePaid }) {
   return (
     <section className="categories-section">
       <div className="section-heading">
@@ -21,6 +21,7 @@ function CategoriesSection({ categoryGroups, hideAmounts, selectedMonth, onEditT
               hideAmounts={hideAmounts}
               key={group.category}
               onEditTransaction={onEditTransaction}
+              onTogglePaid={onTogglePaid}
             />
           ))}
         </div>
