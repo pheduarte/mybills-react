@@ -58,8 +58,8 @@ function CategoryCard({ group, hideAmounts, onEditTransaction, onTogglePaid }) {
                       type="button"
                       onClick={() => onTogglePaid(transaction.id)}
                     >
-                      {/* {transaction.isPaid ? 'Unpaid' : 'Pay'} */}
-                      Pay
+                      {transaction.isPaid ? 'Unpaid' : 'Pay'}
+                      {/* Pay */}
                     </button>
                   </>
                 ) : null}
