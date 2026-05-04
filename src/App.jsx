@@ -7,7 +7,7 @@ import BudgetManagementSection from './components/budget/BudgetManagementSection
 import CategoriesSection from './components/categories/CategoriesSection'
 import TransactionComposer from './components/composer/TransactionComposer'
 import HeroCard from './components/dashboard/HeroCard'
-import { CATEGORY_SUGGESTIONS, MONTH_STORAGE_KEY } from './constants/appConstants'
+import { CATEGORY_ORDER_STORAGE_KEY, CATEGORY_SUGGESTIONS, MONTH_STORAGE_KEY } from './constants/appConstants'
 import { useAuthSession } from './hooks/useAuthSession'
 import { useTransactionsSync } from './hooks/useTransactionsSync'
 import { isFirebaseConfigured } from './firebase'
@@ -21,7 +21,7 @@ import {
   sortTransactions,
   sumAmounts,
 } from './utils/transactions'
-import { getInitialMonth } from './utils/storage'
+import { getInitialCategoryOrder, getInitialMonth } from './utils/storage'
 
 const THEME_STORAGE_KEY = 'mybills-theme-v1'
 
@@ -40,6 +40,9 @@ function App() {
 
   // This state switches between the monthly breakdown and budget management views.
   const [activeTab, setActiveTab] = useState('breakdown')
+
+  // This state remembers the user's preferred category card order.
+  const [categoryOrder, setCategoryOrder] = useState(getInitialCategoryOrder)
 
   // This state tracks whether the bottom composer is editing an existing transaction.
   const [editingTransactionId, setEditingTransactionId] = useState(null)
@@ -76,6 +79,11 @@ function App() {
     localStorage.setItem(MONTH_STORAGE_KEY, selectedMonth)
   }, [selectedMonth])
 
+  // This effect remembers the custom card order between visits.
+  useEffect(() => {
+    localStorage.setItem(CATEGORY_ORDER_STORAGE_KEY, JSON.stringify(categoryOrder))
+  }, [categoryOrder])
+
   // This effect applies the chosen theme across the whole app, including auth screens.
   useEffect(() => {
     document.documentElement.dataset.theme = theme
@@ -98,6 +106,24 @@ function App() {
 
   // This grouped data becomes the list of separate category cards.
   const categoryGroups = groupTransactionsByCategory(monthTransactions)
+  const orderedCategoryGroups = [...categoryGroups].sort((left, right) => {
+    const leftIndex = categoryOrder.indexOf(left.category)
+    const rightIndex = categoryOrder.indexOf(right.category)
+
+    if (leftIndex === -1 && rightIndex === -1) {
+      return 0
+    }
+
+    if (leftIndex === -1) {
+      return 1
+    }
+
+    if (rightIndex === -1) {
+      return -1
+    }
+
+    return leftIndex - rightIndex
+  })
 
   // This derived list feeds the category suggestion menu while still allowing new values.
   const categoryOptions = [...new Set([...CATEGORY_SUGGESTIONS, ...transactions.map((item) => item.category)])].sort(
@@ -135,6 +161,39 @@ function App() {
           : transaction,
       ),
     )
+  }
+
+  // This handler moves one category card before or after another card.
+  function handleReorderCategory(sourceCategory, targetCategory, position = 'before') {
+    if (sourceCategory === targetCategory) {
+      return
+    }
+
+    const visibleCategories = categoryGroups.map((group) => group.category)
+
+    setCategoryOrder((currentOrder) => {
+      const orderedVisibleCategories = [
+        ...currentOrder.filter((category) => visibleCategories.includes(category)),
+        ...visibleCategories.filter((category) => !currentOrder.includes(category)),
+      ]
+      const sourceIndex = orderedVisibleCategories.indexOf(sourceCategory)
+      const targetIndex = orderedVisibleCategories.indexOf(targetCategory)
+
+      if (sourceIndex === -1 || targetIndex === -1) {
+        return currentOrder
+      }
+
+      const nextVisibleCategories = [...orderedVisibleCategories]
+      const [movedCategory] = nextVisibleCategories.splice(sourceIndex, 1)
+      const nextTargetIndex = nextVisibleCategories.indexOf(targetCategory)
+      const insertionIndex = position === 'after' ? nextTargetIndex + 1 : nextTargetIndex
+      nextVisibleCategories.splice(insertionIndex, 0, movedCategory)
+
+      return [
+        ...nextVisibleCategories,
+        ...currentOrder.filter((category) => !visibleCategories.includes(category)),
+      ]
+    })
   }
 
   // This handler updates the selected month's limit for one category.
@@ -461,10 +520,11 @@ function App() {
 
       {activeTab === 'breakdown' ? (
         <CategoriesSection
-          categoryGroups={categoryGroups}
+          categoryGroups={orderedCategoryGroups}
           hideAmounts={hideAmounts}
           selectedMonth={selectedMonth}
           onEditTransaction={handleEditTransaction}
+          onReorderCategory={handleReorderCategory}
           onTogglePaid={handleTogglePaid}
         />
       ) : (

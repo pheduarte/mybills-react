@@ -1,5 +1,5 @@
 import { CATEGORY_SUGGESTIONS } from '../constants/appConstants'
-import { sortTransactions, sumAmounts } from './transactions'
+import { sumAmounts } from './transactions'
 
 // This helper keeps the budget tab focused on spending categories.
 export function getBudgetCategories(categoryGroups, categoryOptions) {
@@ -32,13 +32,12 @@ export function getBudgetCategories(categoryGroups, categoryOptions) {
 // This helper prepares every display value used by the budget management tab.
 export function createBudgetRows(categories, monthTransactions, monthBudgets = {}) {
   return categories.map((category) => {
-    const paidTransactions = sortTransactions(
+    const paidTotal = sumAmounts(
       monthTransactions.filter(
         (transaction) =>
           transaction.type === 'expense' && transaction.category === category && Boolean(transaction.isPaid),
       ),
     )
-    const paidTotal = sumAmounts(paidTransactions)
     const budget = Number(monthBudgets[category] ?? 0)
     const remaining = budget - paidTotal
     const usage = budget > 0 ? Math.min((paidTotal / budget) * 100, 100) : 0
@@ -47,7 +46,6 @@ export function createBudgetRows(categories, monthTransactions, monthBudgets = {
       budget,
       category,
       paidTotal,
-      paidTransactions,
       remaining,
       usage,
     }

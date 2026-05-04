@@ -1,4 +1,4 @@
-import { formatCurrency, formatMonthLabel, formatShortDate } from '../../utils/formatters'
+import { formatCurrency, formatMonthLabel } from '../../utils/formatters'
 import { getCategoryColor } from '../../utils/transactions'
 
 // This tab lets users set category limits and see paid expenses consuming them.
@@ -75,19 +75,6 @@ function BudgetManagementSection({ budgetRows, hideAmounts, selectedMonth, onBud
               </span>
             </div>
 
-            {row.paidTransactions.length > 0 ? (
-              <div className="budget-card__payments">
-                {row.paidTransactions.slice(0, 3).map((transaction) => (
-                  <div className="budget-payment" key={transaction.id}>
-                    <span>{transaction.title}</span>
-                    <strong>{formatCurrency(transaction.amount, hideAmounts)}</strong>
-                    <small>{formatShortDate(transaction.date)}</small>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="budget-card__empty">No paid expenses yet.</p>
-            )}
           </article>
         ))}
       </div>

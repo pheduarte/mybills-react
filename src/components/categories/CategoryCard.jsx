@@ -3,12 +3,42 @@ import { formatCurrency, formatShortDate } from '../../utils/formatters'
 import { getCategoryColor } from '../../utils/transactions'
 
 // This component renders one category card at a time.
-function CategoryCard({ group, hideAmounts, onEditTransaction, onTogglePaid }) {
+function CategoryCard({
+  dragPosition,
+  draggableCategory,
+  group,
+  hideAmounts,
+  onDragEnd,
+  onDragOver,
+  onDragStart,
+  onDrop,
+  onEditTransaction,
+  onTogglePaid,
+}) {
   const [isExpanded, setIsExpanded] = useState(true)
+  const isDragging = draggableCategory === group.category
 
   return (
-    <article className={`category-card ${group.type}`} style={{ '--category-accent': getCategoryColor(group.category) }}>
+    <article
+      className={`category-card ${group.type} ${isDragging ? 'category-card--dragging' : ''} ${
+        dragPosition ? `category-card--drop-${dragPosition}` : ''
+      }`}
+      style={{ '--category-accent': getCategoryColor(group.category) }}
+      onDragOver={(event) => onDragOver(event, group.category)}
+      onDrop={(event) => onDrop(event, group.category)}
+    >
       <header className="category-card__header">
+        <button
+          className="category-card__drag-handle"
+          type="button"
+          draggable
+          onDragStart={(event) => onDragStart(event, group.category)}
+          onDragEnd={onDragEnd}
+          aria-label={`Drag ${group.category} category`}
+          title="Drag to reorder"
+        >
+          <span aria-hidden="true">⋮⋮</span>
+        </button>
         <button
           className="category-card__summary"
           type="button"
