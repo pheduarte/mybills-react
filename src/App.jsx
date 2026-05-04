@@ -477,7 +477,7 @@ function App() {
             title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
           >
             <span className="theme-chip__icon" aria-hidden="true">
-              {theme === 'light' ? '☾' : '☀'}
+              {theme === 'light' ? 'Dark' : 'Light'}
             </span>
           </button>
           <button className="ghost-button ghost-button--session" type="button" onClick={handleSignOut}>
