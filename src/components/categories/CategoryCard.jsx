@@ -48,9 +48,6 @@ function CategoryCard({ group, hideAmounts, onEditTransaction, onTogglePaid }) {
               <div className="transaction-row__meta">
                 {transaction.type === 'expense' ? (
                   <>
-                    {/* <span className={`status-chip ${transaction.isPaid ? 'paid' : 'unpaid'}`}>
-                      {transaction.isPaid ? 'Paid' : 'Not paid'}
-                    </span> */}
                     <button
                       className={`ghost-button transaction-row__action ${
                         transaction.isPaid ? 'transaction-row__action--paid' : ''
@@ -59,7 +56,6 @@ function CategoryCard({ group, hideAmounts, onEditTransaction, onTogglePaid }) {
                       onClick={() => onTogglePaid(transaction.id)}
                     >
                       {transaction.isPaid ? 'Unpaid' : 'Pay'}
-                      {/* Pay */}
                     </button>
                   </>
                 ) : null}

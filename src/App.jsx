@@ -3,6 +3,7 @@ import './App.css'
 import AuthPanel from './components/auth/AuthPanel'
 import FirebaseSetupPanel from './components/auth/FirebaseSetupPanel'
 import LoadingPanel from './components/auth/LoadingPanel'
+import BudgetManagementSection from './components/budget/BudgetManagementSection'
 import CategoriesSection from './components/categories/CategoriesSection'
 import TransactionComposer from './components/composer/TransactionComposer'
 import HeroCard from './components/dashboard/HeroCard'
@@ -11,6 +12,7 @@ import { useAuthSession } from './hooks/useAuthSession'
 import { useTransactionsSync } from './hooks/useTransactionsSync'
 import { isFirebaseConfigured } from './firebase'
 import { getDefaultDateForMonth, getMonthKey, shiftMonth } from './utils/date'
+import { createBudgetRows, getBudgetCategories } from './utils/budgets'
 import { groupTransactionsByCategory } from './utils/transactions'
 import {
   createEmptyForm,
@@ -35,6 +37,9 @@ function App() {
 
   // This state controls whether the bottom add-entry composer is open.
   const [isEntryOpen, setIsEntryOpen] = useState(false)
+
+  // This state switches between the monthly breakdown and budget management views.
+  const [activeTab, setActiveTab] = useState('breakdown')
 
   // This state tracks whether the bottom composer is editing an existing transaction.
   const [editingTransactionId, setEditingTransactionId] = useState(null)
@@ -63,7 +68,8 @@ function App() {
   } = useAuthSession({ onSignedOut: handleSignedOutState })
 
   // This hook loads and syncs transactions to Firestore.
-  const { hasLoadedRemoteData, isDataLoading, setTransactions, syncError, transactions } = useTransactionsSync(user)
+  const { budgets, hasLoadedRemoteData, isDataLoading, setBudgets, setTransactions, syncError, transactions } =
+    useTransactionsSync(user)
 
   // This effect remembers the month the user viewed last.
   useEffect(() => {
@@ -98,6 +104,11 @@ function App() {
     (left, right) => left.localeCompare(right),
   )
 
+  // This derived list powers the budget editor using visible and suggested expense categories.
+  const budgetCategories = getBudgetCategories(categoryGroups, categoryOptions)
+  const selectedMonthBudgets = budgets[selectedMonth] ?? {}
+  const budgetRows = createBudgetRows(budgetCategories, monthTransactions, selectedMonthBudgets)
+
   // This is used to draw the split bar between income and expense totals.
   const cashFlowTotal = totalIncome + totalExpenses
   const incomeShare = cashFlowTotal === 0 ? 50 : (totalIncome / cashFlowTotal) * 100
@@ -124,6 +135,31 @@ function App() {
           : transaction,
       ),
     )
+  }
+
+  // This handler updates the selected month's limit for one category.
+  function handleBudgetAmountChange(category, value) {
+    const amount = Number(value)
+
+    if (value !== '' && (Number.isNaN(amount) || amount < 0)) {
+      return
+    }
+
+    setBudgets((currentBudgets) => {
+      const currentMonthBudgets = currentBudgets[selectedMonth] ?? {}
+      const nextMonthBudgets = { ...currentMonthBudgets }
+
+      if (value === '') {
+        delete nextMonthBudgets[category]
+      } else {
+        nextMonthBudgets[category] = amount
+      }
+
+      return {
+        ...currentBudgets,
+        [selectedMonth]: nextMonthBudgets,
+      }
+    })
   }
 
   // This handler updates form fields as the user types.
@@ -406,13 +442,39 @@ function App() {
         onMonthChange={handleMonthChange}
       />
 
-      <CategoriesSection
-        categoryGroups={categoryGroups}
-        hideAmounts={hideAmounts}
-        selectedMonth={selectedMonth}
-        onEditTransaction={handleEditTransaction}
-        onTogglePaid={handleTogglePaid}
-      />
+      <nav className="app-tabs" aria-label="Dashboard sections">
+        <button
+          className={`app-tab ${activeTab === 'breakdown' ? 'app-tab--active' : ''}`}
+          type="button"
+          onClick={() => setActiveTab('breakdown')}
+        >
+          Breakdown
+        </button>
+        <button
+          className={`app-tab ${activeTab === 'budget' ? 'app-tab--active' : ''}`}
+          type="button"
+          onClick={() => setActiveTab('budget')}
+        >
+          Budget
+        </button>
+      </nav>
+
+      {activeTab === 'breakdown' ? (
+        <CategoriesSection
+          categoryGroups={categoryGroups}
+          hideAmounts={hideAmounts}
+          selectedMonth={selectedMonth}
+          onEditTransaction={handleEditTransaction}
+          onTogglePaid={handleTogglePaid}
+        />
+      ) : (
+        <BudgetManagementSection
+          budgetRows={budgetRows}
+          hideAmounts={hideAmounts}
+          selectedMonth={selectedMonth}
+          onBudgetChange={handleBudgetAmountChange}
+        />
+      )}
 
       <TransactionComposer
         categoryOptions={categoryOptions}

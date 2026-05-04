@@ -1,5 +1,6 @@
 // These local keys help us keep browser-only preferences between visits.
 export const STORAGE_KEY = 'mybills-transactions-v1'
+export const BUDGET_STORAGE_KEY = 'mybills-budgets-v1'
 export const MONTH_STORAGE_KEY = 'mybills-selected-month-v1'
 export const RECURRING_MONTH_COUNT = 24
 
