@@ -7,8 +7,10 @@ import BudgetManagementSection from './components/budget/BudgetManagementSection
 import CategoriesSection from './components/categories/CategoriesSection'
 import TransactionComposer from './components/composer/TransactionComposer'
 import HeroCard from './components/dashboard/HeroCard'
+import NotificationSettings from './components/notifications/NotificationSettings'
 import { CATEGORY_ORDER_STORAGE_KEY, CATEGORY_SUGGESTIONS, MONTH_STORAGE_KEY } from './constants/appConstants'
 import { useAuthSession } from './hooks/useAuthSession'
+import { useBillNotifications } from './hooks/useBillNotifications'
 import { useTransactionsSync } from './hooks/useTransactionsSync'
 import { isFirebaseConfigured } from './firebase'
 import { getDefaultDateForMonth, getMonthKey, shiftMonth } from './utils/date'
@@ -73,6 +75,9 @@ function App() {
   // This hook loads and syncs transactions to Firestore.
   const { budgets, hasLoadedRemoteData, isDataLoading, setBudgets, setTransactions, syncError, transactions } =
     useTransactionsSync(user)
+
+  // This hook owns iPhone/PWA notification permission and bill due-date scheduling.
+  const billNotifications = useBillNotifications(transactions)
 
   // This effect remembers the month the user viewed last.
   useEffect(() => {
@@ -499,6 +504,17 @@ function App() {
         totalExpenses={totalExpenses}
         totalIncome={totalIncome}
         onMonthChange={handleMonthChange}
+      />
+
+      <NotificationSettings
+        isStandalone={billNotifications.isStandalone}
+        isSupported={billNotifications.isSupported}
+        permission={billNotifications.permission}
+        settings={billNotifications.settings}
+        setSettings={billNotifications.setSettings}
+        upcomingReminders={billNotifications.upcomingReminders}
+        onRequestPermission={billNotifications.requestPermission}
+        onSendTestNotification={billNotifications.sendTestNotification}
       />
 
       <nav className="app-tabs" aria-label="Dashboard sections">

@@ -145,7 +145,8 @@
 /* These panels are the main card surfaces used throughout the app. */
 .hero-card,
 .panel,
-.category-card {
+.category-card,
+.notification-panel {
   border-radius: 28px;
   background: var(--surface-bg);
   border: 1px solid var(--surface-border);
@@ -279,6 +280,142 @@
 
 .balance-row.negative strong {
   color: var(--negative);
+}
+
+.notification-panel {
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+}
+
+.notification-panel__header,
+.notification-panel__actions,
+.notification-preview__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.notification-panel h3 {
+  margin: 0;
+  font-size: 1.18rem;
+}
+
+.notification-panel__copy,
+.notification-preview__empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.notification-status {
+  flex-shrink: 0;
+}
+
+.notification-status--granted {
+  background: var(--status-paid-bg);
+  color: var(--status-paid-text);
+}
+
+.notification-status--denied,
+.notification-status--unsupported {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.notification-panel__button {
+  min-height: 44px;
+}
+
+.notification-panel__button:disabled,
+.notification-controls :disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.switch-row {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-strong);
+  font-weight: 800;
+}
+
+.switch-row input {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--positive);
+}
+
+.notification-controls {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 10px;
+}
+
+.notification-controls label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.notification-controls select,
+.notification-controls input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid var(--input-border);
+  border-radius: 16px;
+  background: var(--input-bg);
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.notification-preview {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 20px;
+  background: var(--surface-soft);
+}
+
+.notification-preview__row {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--divider);
+}
+
+.notification-preview__row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.notification-preview__row span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.notification-preview__row strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notification-preview__row small {
+  color: var(--muted);
+}
+
+.notification-preview__row time {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 /* The form uses a simple stacked mobile layout with two-column rows where space allows. */
@@ -766,7 +903,10 @@
 }
 
 .budget-input input:focus,
-.app-tab:focus {
+.app-tab:focus,
+.notification-controls select:focus,
+.notification-controls input:focus,
+.switch-row input:focus {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
@@ -840,7 +980,8 @@
 /* This small breakpoint keeps the form usable on narrower phones too. */
 @media (max-width: 380px) {
   .summary-grid,
-  .form-row {
+  .form-row,
+  .notification-panel__actions {
     flex-direction: column;
   }
 
@@ -863,6 +1004,17 @@
 
   .balance-row strong {
     text-align: left;
+  }
+
+  .notification-panel__button,
+  .switch-row {
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .notification-controls {
+    grid-template-columns: 1fr;
   }
 }
 

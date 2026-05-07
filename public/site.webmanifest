@@ -2,6 +2,7 @@
   "name": "MyBills",
   "short_name": "MyBills",
   "description": "Track income, bills, recurring payments, and installments in a clean mobile dashboard.",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
