@@ -16,8 +16,7 @@ function TransactionComposer({
     return (
       <section className="panel composer composer--closed">
         <button className="composer-trigger" type="button" onClick={onOpen}>
-          <span className="composer-trigger__label">Add new entry</span>
-          <span className="composer-trigger__placeholder">Tap to add income or expense...</span>
+          <span className="composer-trigger__label">+ New Transaction</span>
         </button>
       </section>
     )
@@ -27,12 +26,11 @@ function TransactionComposer({
     <section className="panel composer composer--open">
       <div className="panel__title">
         <div>
-          <p className="eyebrow">{editingTransactionId ? 'Edit entry' : 'Add new entry'}</p>
+          <p className="eyebrow">{editingTransactionId ? 'Edit transaction' : 'Add new transaction'}</p>
           <h3>{editingTransactionId ? 'Update transaction' : 'Income and expenses'}</h3>
         </div>
 
         <div className="composer-actions">
-          <span className="chip chip--cloud">Cloud sync</span>
           <button className="ghost-button" type="button" onClick={onClose}>
             X
           </button>

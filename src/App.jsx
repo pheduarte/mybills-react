@@ -7,6 +7,7 @@ import BudgetManagementSection from './components/budget/BudgetManagementSection
 import CategoriesSection from './components/categories/CategoriesSection'
 import TransactionComposer from './components/composer/TransactionComposer'
 import HeroCard from './components/dashboard/HeroCard'
+import UpcomingBillsSection from './components/dashboard/UpcomingBillsSection'
 import { CATEGORY_ORDER_STORAGE_KEY, CATEGORY_SUGGESTIONS, MONTH_STORAGE_KEY } from './constants/appConstants'
 import { useAuthSession } from './hooks/useAuthSession'
 import { useTransactionsSync } from './hooks/useTransactionsSync'
@@ -25,6 +26,44 @@ import { getInitialCategoryOrder, getInitialMonth } from './utils/storage'
 
 const THEME_STORAGE_KEY = 'mybills-theme-v1'
 
+const NAV_ITEMS = [
+  {
+    id: 'home',
+    label: 'Home',
+    icon: (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 11.5 12 5l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-8.5Z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'categories',
+    label: 'Categories',
+    icon: (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5 5h6v6H5V5Zm8 0h6v6h-6V5ZM5 13h6v6H5v-6Zm8 0h6v6h-6v-6Z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'budget',
+    label: 'Budget',
+    icon: (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5 6h14a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Zm2 3v2h10V9H7Zm0 4v2h6v-2H7Z" />
+      </svg>
+    ),
+  },
+]
+
+function getTodayKey() {
+  const today = new Date()
+
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
+    today.getDate(),
+  ).padStart(2, '0')}`
+}
+
 function App() {
   // This state tracks which month the dashboard should show.
   const [selectedMonth, setSelectedMonth] = useState(getInitialMonth)
@@ -38,8 +77,8 @@ function App() {
   // This state controls whether the bottom add-entry composer is open.
   const [isEntryOpen, setIsEntryOpen] = useState(false)
 
-  // This state switches between the monthly breakdown and budget management views.
-  const [activeTab, setActiveTab] = useState('breakdown')
+  // This state switches the main bottom-nav screens.
+  const [activeScreen, setActiveScreen] = useState('home')
 
   // This state remembers the user's preferred category card order.
   const [categoryOrder, setCategoryOrder] = useState(getInitialCategoryOrder)
@@ -141,6 +180,12 @@ function App() {
 
   // This derived item gives the composer access to the transaction currently being edited.
   const editingTransaction = transactions.find((transaction) => transaction.id === editingTransactionId) ?? null
+
+  const upcomingBills = sortTransactions(
+    transactions.filter(
+      (transaction) => transaction.type === 'expense' && !transaction.isPaid && transaction.date >= getTodayKey(),
+    ),
+  ).slice(0, 5)
 
   // This helper restores the composer to its default add-entry state.
   function resetComposer(monthKey = selectedMonth) {
@@ -491,34 +536,28 @@ function App() {
 
       {syncError ? <p className="sync-banner">{syncError}</p> : null}
 
-      <HeroCard
-        balance={balance}
-        hideAmounts={hideAmounts}
-        incomeShare={incomeShare}
-        selectedMonth={selectedMonth}
-        totalExpenses={totalExpenses}
-        totalIncome={totalIncome}
-        onMonthChange={handleMonthChange}
-      />
+      {activeScreen === 'home' ? (
+        <>
+          <HeroCard
+            balance={balance}
+            hideAmounts={hideAmounts}
+            incomeShare={incomeShare}
+            selectedMonth={selectedMonth}
+            totalExpenses={totalExpenses}
+            totalIncome={totalIncome}
+            onMonthChange={handleMonthChange}
+          />
 
-      <nav className="app-tabs" aria-label="Dashboard sections">
-        <button
-          className={`app-tab ${activeTab === 'breakdown' ? 'app-tab--active' : ''}`}
-          type="button"
-          onClick={() => setActiveTab('breakdown')}
-        >
-          Breakdown
-        </button>
-        <button
-          className={`app-tab ${activeTab === 'budget' ? 'app-tab--active' : ''}`}
-          type="button"
-          onClick={() => setActiveTab('budget')}
-        >
-          Budget
-        </button>
-      </nav>
+          <UpcomingBillsSection
+            bills={upcomingBills}
+            hideAmounts={hideAmounts}
+            onEditTransaction={handleEditTransaction}
+            onTogglePaid={handleTogglePaid}
+          />
+        </>
+      ) : null}
 
-      {activeTab === 'breakdown' ? (
+      {activeScreen === 'categories' ? (
         <CategoriesSection
           categoryGroups={orderedCategoryGroups}
           hideAmounts={hideAmounts}
@@ -527,14 +566,16 @@ function App() {
           onReorderCategory={handleReorderCategory}
           onTogglePaid={handleTogglePaid}
         />
-      ) : (
+      ) : null}
+
+      {activeScreen === 'budget' ? (
         <BudgetManagementSection
           budgetRows={budgetRows}
           hideAmounts={hideAmounts}
           selectedMonth={selectedMonth}
           onBudgetChange={handleBudgetAmountChange}
         />
-      )}
+      ) : null}
 
       <TransactionComposer
         categoryOptions={categoryOptions}
@@ -549,6 +590,21 @@ function App() {
         onOpen={() => setIsEntryOpen(true)}
         onSaveTransaction={handleSaveTransaction}
       />
+
+      <nav className="bottom-nav" aria-label="Main navigation">
+        {NAV_ITEMS.map((item) => (
+          <button
+            className={`bottom-nav__item ${activeScreen === item.id ? 'bottom-nav__item--active' : ''}`}
+            type="button"
+            key={item.id}
+            onClick={() => setActiveScreen(item.id)}
+            aria-current={activeScreen === item.id ? 'page' : undefined}
+          >
+            <span className="bottom-nav__icon">{item.icon}</span>
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </nav>
     </main>
   )
 }
